@@ -1,5 +1,2 @@
-/blockchain.json
-/chain.json
 /data
-/nodes.json
-/users.json
+__pycache__
