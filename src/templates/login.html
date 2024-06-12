@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン</title>
+</head>
+<body>
+    <h2>ログイン</h2>
+    <form method="post">
+        <p><input type="text" name="username" placeholder="ユーザー名"></p>
+        <p><input type="password" name="password" placeholder="パスワード"></p>
+        <p><input type="submit" value="ログイン"></p>
+    </form>
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+    <p>アカウントをお持ちでないですか？ <a href="/register">こちらで登録</a></p>
+</body>
+</html>

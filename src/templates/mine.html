@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイニング結果</title>
+</head>
+<body>
+    <h2>新しいブロックがマイニングされました！</h2>
+    <p>インデックス: {{ block['index'] }}</p>
+    <p>タイムスタンプ: {{ block['timestamp'] }}</p>
+    <p>トランザクション: {{ block['transactions'] }}</p>
+    <p>プルーフ: {{ block['proof'] }}</p>
+    <p>前のハッシュ: {{ block['previousHash'] }}</p>
+    <a href="/">ダッシュボードに戻る</a>
+</body>
+</html>

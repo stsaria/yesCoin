@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ノード一覧</title>
+</head>
+<body>
+    <h2>ノード一覧</h2>
+    <ul>
+        {% for node in nodes %}
+            <li>{{ node.ip }}:{{ node.port }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/">ダッシュボードに戻る</a>
+</body>
+</html>
