@@ -7,7 +7,7 @@ PORT = 11380
 
 def main():
     print("YesCoin Start..")
-    if sys.argv > 1:
+    if len(sys.argv) > 1:
         if sys.argv[1] == "centralServer":
             centralApp.app.run(host='0.0.0.0', port=PORT)
             return
