@@ -1,6 +1,6 @@
 import requests, datetime, hashlib, jwt
 from etc import *
-from flask import Flask, request, make_response, redirect, url_for, session, render_template
+from flask import Flask, request, make_response, redirect, url_for, session, render_template, jsonify
 from functools import wraps
 from blockchain import BlockChain
 
@@ -122,6 +122,14 @@ def index():
     balance = users[address]['balance']
     return render_template('index.html', username=username, address=address, balance=balance)
 
+@app.route('/chain', methods=['GET'])
+def fullChain():
+    response = {
+        'chain': blockchain.chain,
+        'length': len(blockchain.chain)
+    }
+    return jsonify(response), 200
+
 # ノード一覧を表示するエンドポイント
 @app.route("/nodes", methods=["GET"])
 def getNodes():
@@ -183,6 +191,7 @@ def syncBlockchain():
         message = '既存のブロックチェーンが最長です'
     
     return render_template('sync.html', message=message, nodes=connectedNodes)
+
 @app.route("/mine", methods=["GET"])
 @requiresAuth
 def mine():
