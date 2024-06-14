@@ -1,4 +1,4 @@
-import requests, datetime, hashlib, jwt
+import requests, datetime, hashlib, socket, jwt
 from etc import *
 from flask import Flask, request, make_response, redirect, url_for, session, render_template, jsonify
 from functools import wraps
@@ -154,3 +154,63 @@ def send():
         blockchain.newTransaction(sender, recipient, amount)
         return render_template("send.html", success="送金が成功しました")
     return render_template("send.html")
+
+@app.route('/chain', methods=['GET'])
+def fullChain():
+    response = {
+        'chain': blockchain.chain,
+        'length': len(blockchain.chain)
+    }
+    return jsonify(response), 200
+
+def registerWithCentralServers():
+    ip = socket.gethostbyname(socket.gethostname())
+    nodeData = {"ip": ip, "port": 5000}
+    for centralServer in centralServers:
+        try:
+            response = requests.post(f"{centralServer}/register", json=nodeData)
+            if response.status_code == 201:
+                print(f"Registered with central server {centralServer}")
+        except requests.ConnectionError:
+            print(f"Failed to connect to central server {centralServer}")
+
+def getNodesFromCentralServers():
+    nodes = []
+    for centralServer in centralServers:
+        try:
+            response = requests.get(f"{centralServer}/nodes")
+            if response.status_code == 200:
+                nodes += response.json()
+        except requests.ConnectionError:
+            print(f"Failed to connect to central server {centralServer}")
+    return nodes
+
+@app.route('/sync', methods=["GET"])
+def syncBlockchain():
+    global blockchain
+    nodes = getNodesFromCentralServers()
+    
+    longestChain = None
+    maxLength = len(blockchain.chain)
+    
+    for node in nodes:
+        try:
+            response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+                
+                if length > maxLength and blockchain.validChain(chain):
+                    maxLength = length
+                    longestChain = chain
+        except requests.ConnectionError:
+            continue
+    
+    if longestChain:
+        blockchain.chain = longestChain
+        saveData(blockchainFile, blockchain.chain)
+        message = 'ブロックチェーンが更新されました'
+    else:
+        message = '既存のブロックチェーンが最長です'
+    
+    return render_template('sync.html', message=message, nodes=nodes)
