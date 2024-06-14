@@ -2,5 +2,3 @@ pyjwt
 requests
 Flask
 Flask-Bcrypt
-scapy
-psutil
