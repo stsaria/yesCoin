@@ -8,11 +8,11 @@ def saveData(filename, data):
     with open(filename, 'w') as f:
         json.dump(data, f)
 
-def loadData(filename):
+def loadData(filename, empty=[]):
     try:
         with open(filename, 'r') as f:
             return json.load(f)
-    except FileNotFoundError:
-        return []
+    except:
+        return empty
 
-users = loadData(usersFile)
+users = loadData(usersFile, empty={})

@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>マイニング結果</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <meta http-equiv="refresh" content="1;URL=mine">
 </head>
-<body>
-    <h2>新しいブロックがマイニングされました！</h2>
+{% extends 'base.html' %}
+{% block main %}
+<body class="container-fluid">
+    <h2>マイニング中</h2>
     <p>インデックス: {{ block['index'] }}</p>
     <p>タイムスタンプ: {{ block['timestamp'] }}</p>
-    <p>トランザクション: {{ block['transactions'] }}</p>
-    <p>プルーフ: {{ block['proof'] }}</p>
-    <p>前のハッシュ: {{ block['previousHash'] }}</p>
-    <a href="/">ダッシュボードに戻る</a>
+    <p>所持金: {{ balance }}yc</p>
+    <a href="/">戻る</a>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
+{% endblock %}
 </html>

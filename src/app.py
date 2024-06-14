@@ -1,21 +1,18 @@
-import requests
+import requests, datetime, hashlib, jwt
 from etc import *
-from flask import Flask, jsonify, request, make_response, redirect, url_for, session, render_template
-from flask_bcrypt import generate_password_hash, check_password_hash
+from flask import Flask, request, make_response, redirect, url_for, session, render_template
 from functools import wraps
 from blockchain import BlockChain
-from uuid import uuid4
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # セッションを使用するための秘密鍵
+app.secret_key = "3141592653589793238"
 
 # 初期ノードリスト（公式ノード）
 bootstrapNodes = [
-    {"ip": "127.0.0.1", "port": 5001},
-    {"ip": "127.0.0.1", "port": 5002},
+    #{"ip": "127.0.0.1", "port": 11380}
 ]
 
-
+# ノードを読み込み
 nodes = loadData(nodesFile)
 
 if not nodes:
@@ -24,94 +21,159 @@ if not nodes:
 
 blockchain = BlockChain()
 
-# ユーザー認証
+def generateToken(username, password):
+    # JWTトークン（ログイントークン）生成関数
+    token = jwt.encode({
+        "username": username,
+        "password": password, 
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    }, app.secret_key, algorithm="HS256")
+    return token
+
 def authenticate(username, password):
-    if username in users and check_password_hash(users[username], password):
+    # ユーザー認証関数
+    if (hashlib.sha256(username.encode()).hexdigest()
+    in users and users[hashlib.sha256(username.encode()).hexdigest()]["password"]
+    == hashlib.sha256(password.encode()).hexdigest()):
         return True
     return False
 
-# ログイン
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    # ログインエンドポイント
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
         if authenticate(username, password):
-            session['username'] = username
-            return redirect(url_for('index'))
+            token = generateToken(username, password)
+            response = make_response(redirect(url_for("index")))
+            # トークンをクッキーに保存
+            response.set_cookie("token", token)
+            return response
         else:
-            return render_template('login.html', error='ログインに失敗しました')
-    return render_template('login.html')
+            return render_template("login.html", error="ログインに失敗しました")
+    return render_template("login.html")
 
-# ログアウト
-@app.route('/logout')
+
+@app.route("/logout")
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
+    # ログアウトエンドポイント
+    response = make_response(redirect(url_for("login")))
+    # トークンを削除（ログアウト）
+    response.delete_cookie("token")
+    return response
 
-# ユーザー登録
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        hashedPassword = generate_password_hash(password).decode('utf-8')
-        users[username] = hashedPassword
+    # ユーザー登録エンドポイント
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if authenticate(username, password):
+            return render_template("register.html", error="登録に失敗しました\n既に登録されています")
+        
+        # ユーザー名のハッシュ（アドレス）で保存
+        address = hashlib.sha256(username.encode()).hexdigest()
+        hashedPassword = hashlib.sha256(password.encode()).hexdigest()
+        users[address] = {
+            'password': hashedPassword,
+            'balance': 0  # 初期残高を0に設定
+        }
         saveData(usersFile, users)
-        return redirect(url_for('login'))
-    return render_template('register.html')
+        
+        # indexに移動するために認証しておく
+        if authenticate(username, password):
+            response = make_response(redirect(url_for("index")))
+            token = generateToken(username, password)
+            response.set_cookie("token", token)
+            return response
+        return redirect(url_for("login"))
+    return render_template("register.html")
 
-# ユーザー認証のデコレータ
 def requiresAuth(f):
+    # 認証が必要なエンドポイント用のデコレータ
+    global session
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
+        # トークンを取得
+        token = request.cookies.get("token")
+        if not token:
+            # トークンを持ってないのなら
+            return redirect(url_for("login"))
+        try:
+            data = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+            if authenticate(data["username"], data["password"]):
+                session["username"] = data["username"]
+            else:
+                session["username"] = None
+                return redirect(url_for("login"))
+        except jwt.ExpiredSignatureError:
+            return redirect(url_for("login"))
+        except jwt.InvalidTokenError:
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated
 
-# インデックスページ
 @app.route('/')
 @requiresAuth
 def index():
-    return render_template('index.html', username=session['username'])
+    username = session['username']
+    address = hashlib.sha256(username.encode()).hexdigest()
+    balance = users[address]['balance']
+    return render_template('index.html', username=username, address=address, balance=balance)
 
 # ノード一覧を表示するエンドポイント
-@app.route('/nodes', methods=['GET'])
+@app.route("/nodes", methods=["GET"])
 def getNodes():
-    return render_template('nodes.html', nodes=nodes)
+    # ノード一覧ページ
+    return render_template("nodes.html", nodes=nodes)
 
 # ノード登録エンドポイント
-@app.route('/nodes/register', methods=['POST'])
+@app.route("/nodes/register", methods=["POST"])
 def registerNode():
+    # ノード登録エンドポイント
     newNode = request.get_json()
     nodes.append(newNode)
     saveData(nodesFile, nodes)
     return redirect(url_for('getNodes'))
 
 # ノードに接続するエンドポイント
-@app.route('/nodes/connect', methods=['GET'])
+@app.route("/nodes/connect", methods=["GET"])
 def connectNodes():
+    # ノード接続ページ
     for node in nodes:
         print(f"Connecting to node {node['ip']}:{node['port']}")
-    return render_template('connectNodes.html', nodes=nodes)
+    return render_template("connectNodes.html", nodes=nodes)
 
-# ブロックチェーン同期エンドポイント
 @app.route('/sync', methods=['GET'])
 def syncBlockchain():
     global blockchain
+    # ノードに接続
+    connectedNodes = []
+    for node in nodes:
+        try:
+            response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
+            if response.status_code == 200:
+                connectedNodes.append(node)
+        except requests.ConnectionError:
+            continue
+
+    # ブロックチェーンを同期
     longestChain = None
     maxLength = len(blockchain.chain)
     
-    for node in nodes:
-        response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
-        if response.status_code == 200:
-            length = response.json()['length']
-            chain = response.json()['chain']
-            
-            if length > maxLength and blockchain.validChain(chain):
-                maxLength = length
-                longestChain = chain
+    for node in connectedNodes:
+        try:
+            response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+                
+                if length > maxLength and blockchain.validChain(chain):
+                    maxLength = length
+                    longestChain = chain
+        except requests.ConnectionError:
+            continue
     
     if longestChain:
         blockchain.chain = longestChain
@@ -120,23 +182,36 @@ def syncBlockchain():
     else:
         message = '既存のブロックチェーンが最長です'
     
-    return render_template('sync.html', message=message)
-
-# マイニングエンドポイント
-@app.route('/mine', methods=['GET'])
+    return render_template('sync.html', message=message, nodes=connectedNodes)
+@app.route("/mine", methods=["GET"])
 @requiresAuth
 def mine():
+    # マイニングエンドポイント
     lastBlock = blockchain.lastBlock
-    lastProof = lastBlock['proof']
+    lastProof = lastBlock["proof"]
     proof = blockchain.proofOfWork(lastProof)
-
+    address = hashlib.sha256(session["username"].encode()).hexdigest()
     blockchain.newTransaction(
         sender="0",
-        recipient=session['username'],
-        amount=1,
+        recipient=address,
+        amount=0.001,
     )
 
     previousHash = blockchain.hash(lastBlock)
     block = blockchain.newBlock(proof, previousHash)
 
-    return render_template('mine.html', block=block)
+    return render_template("mine.html", block=block, balance=blockchain.getBalance(address))
+
+@app.route("/send", methods=["GET", "POST"])
+@requiresAuth
+def send():
+    # 送金
+    if request.method == "POST":
+        sender = hashlib.sha256(session["username"].encode()).hexdigest()
+        recipient = request.form["recipient"]
+        amount = float(request.form["amount"])
+        if blockchain.getBalance(sender) < amount:
+            return render_template("send.html", error="残高が不足しています")
+        blockchain.newTransaction(sender, recipient, amount)
+        return render_template("send.html", success="送金が成功しました")
+    return render_template("send.html")
