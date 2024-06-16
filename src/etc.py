@@ -20,6 +20,8 @@ def saveData(filename, data):
         pass
 
 def loadData(filename, empty=[]):
+    # 初期化？
+    if "data" in locals(): del data
     try:
         with open(filename, 'r') as f:
             portalocker.lock(f, portalocker.LOCK_EX)
