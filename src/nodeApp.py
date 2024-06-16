@@ -173,50 +173,60 @@ def getNodesFromCentralServers():
             nodes.remove(node)
     return nodes
 
-@app.route('/sync', methods=['GET'])
+@app.route('/users', methods=['GET'])
+def getUsers():
+    return jsonify(users)
+
 def syncBlockchain():
     global blockchain
     nodes = getNodesFromCentralServers()
-    
     if not nodes:
-        message = 'ノードが見つかりませんでした'
-        return render_template('sync.html', message=message, nodes=nodes)
-    
+        return "ノードが見つかりませんでした", [{"ip": "x.x.x.x", "port": 11380}]
     longestChain = None
     maxLength = len(blockchain.chain)
-    
-    print(nodes)
     for node in nodes:
         try:
             response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
-            print(response.json())
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
-                
                 if length > maxLength and blockchain.validChain(chain):
                     maxLength = length
                     longestChain = chain
-        except Exception as e:
+        except:
             nodes.remove(node)
-            print(e)
             continue
-    
     if longestChain:
         blockchain.chain = longestChain
         saveData(chainFile, blockchain.chain)
         message = 'ブロックチェーンが更新されました'
     else:
         message = '既存のブロックチェーンが最長です'
-    
-    return render_template('sync.html', message=message, nodes=nodes)
+    return message, nodes
+
+def syncUsers():
+    global users
+    nodes = getNodesFromCentralServers()
+    if not nodes:
+        return "ノードが見つかりませんでした", [{"ip": "x.x.x.x", "port": 11380}]
+    for node in nodes:
+        try:
+            response = requests.get(f"http://{node['ip']}:{node['port']}/users")
+            if response.status_code == 200:
+                remoteUsers = response.json()
+                users.update(remoteUsers)
+        except:
+            nodes.remove(node)
+            continue
+    saveData(usersFile, users)
+    return "ユーザー情報が同期されました", nodes
 
 @app.route("/send", methods=["GET", "POST"])
 @requiresAuth
 def send():
     # 送金
     # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
-    syncBlockchain()
+    requests.get(f"http://localhost:127.0.0.1/sync")
     if request.method == "POST":
         sender = hashlib.sha256(session["username"].encode()).hexdigest()
         recipient = request.form["recipient"]
@@ -227,8 +237,16 @@ def send():
         return render_template("send.html", success="送金が成功しました")
     return render_template("send.html")
 
+@app.route('/sync', methods=['GET'])
+def sync():
+    blockchainMessage, nodes = syncBlockchain()
+    usersMessage = syncUsers()[0]
+    return render_template('sync.html', blockchainMessage=blockchainMessage, usersMessage=usersMessage, nodes=nodes)
+
 def syncBlockchainPeriodically():
     # 定期同期のための関数
     while True:
-        syncBlockchain()
+        time.sleep(5)
+        print("Periodic sync")
+        requests.get(f"http://127.0.0.1:11380/sync")
         time.sleep(60)
