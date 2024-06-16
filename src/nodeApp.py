@@ -165,30 +165,40 @@ def fullChain():
 
 def registerWithCentralServers():
     ip = socket.gethostbyname(socket.gethostname())
-    nodeData = {"ip": ip, "port": 5000}
+    nodeData = {"ip": ip, "port": 11380}
     for centralServer in centralServers:
         try:
             response = requests.post(f"{centralServer}/register", json=nodeData)
             if response.status_code == 201:
-                print(f"Registered with central server {centralServer}")
+                print(f"中央サーバーノードを登録しました サーバー:{centralServer}")
         except requests.ConnectionError:
-            print(f"Failed to connect to central server {centralServer}")
+            print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
 
 def getNodesFromCentralServers():
     nodes = []
+    ip = socket.gethostbyname(socket.gethostname())
     for centralServer in centralServers:
         try:
             response = requests.get(f"{centralServer}/nodes")
             if response.status_code == 200:
-                nodes += response.json()
+                newNodes = response.json()
+                nodes.extend(newNodes)
         except requests.ConnectionError:
-            print(f"Failed to connect to central server {centralServer}")
-    return nodes
+            print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
+    notInMySelfNodes = []
+    for node in nodes:
+        if not node == {"ip": ip, "port": 11380}:
+            notInMySelfNodes.append(node)
+    return notInMySelfNodes
 
-@app.route('/sync', methods=["GET"])
+@app.route('/sync', methods=['GET'])
 def syncBlockchain():
     global blockchain
     nodes = getNodesFromCentralServers()
+    
+    if not nodes:
+        message = 'ノードが見つかりませんでした'
+        return render_template('sync.html', message=message, nodes=nodes)
     
     longestChain = None
     maxLength = len(blockchain.chain)
