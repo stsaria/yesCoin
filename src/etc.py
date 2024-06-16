@@ -9,18 +9,6 @@ centralServers = [
     'http://192.168.1.39:11380'
 ]
 
-def lockFile(file_path):
-    with open(file_path, 'a') as f:
-        try:
-            # ファイルロックを取得
-            portalocker.lock(f, portalocker.LOCK_EX)
-            print(f'{file_path} is locked')
-            time.sleep(3)  # 擬似的な処理時間のための待機
-        finally:
-            # ファイルロックを解放
-            portalocker.unlock(f)
-            print(f'{file_path} is unlocked')
-
 def saveData(filename, data):
     try:
         with open(filename, 'w') as f:
