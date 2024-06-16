@@ -141,20 +141,6 @@ def mine():
 
     return render_template("mine.html", block=block, balance=blockchain.getBalance(address))
 
-@app.route("/send", methods=["GET", "POST"])
-@requiresAuth
-def send():
-    # 送金
-    if request.method == "POST":
-        sender = hashlib.sha256(session["username"].encode()).hexdigest()
-        recipient = request.form["recipient"]
-        amount = float(request.form["amount"])
-        if blockchain.getBalance(sender) < amount:
-            return render_template("send.html", error="残高が不足しています")
-        blockchain.newTransaction(sender, recipient, amount)
-        return render_template("send.html", success="送金が成功しました")
-    return render_template("send.html")
-
 @app.route('/chain', methods=['GET'])
 def fullChain():
     response = {
@@ -182,6 +168,9 @@ def getNodesFromCentralServers():
                 nodes.extend(newNodes)
         except requests.ConnectionError:
             print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
+    for node in nodes:
+        if not ("ip" in node and "port" in node):
+            nodes.remove(node)
     return nodes
 
 @app.route('/sync', methods=['GET'])
@@ -196,9 +185,11 @@ def syncBlockchain():
     longestChain = None
     maxLength = len(blockchain.chain)
     
+    print(nodes)
     for node in nodes:
         try:
             response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
+            print(response.json())
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
@@ -206,14 +197,38 @@ def syncBlockchain():
                 if length > maxLength and blockchain.validChain(chain):
                     maxLength = length
                     longestChain = chain
-        except requests.ConnectionError:
+        except Exception as e:
+            nodes.remove(node)
+            print(e)
             continue
     
     if longestChain:
         blockchain.chain = longestChain
-        saveData(blockchainFile, blockchain.chain)
+        saveData(chainFile, blockchain.chain)
         message = 'ブロックチェーンが更新されました'
     else:
         message = '既存のブロックチェーンが最長です'
     
     return render_template('sync.html', message=message, nodes=nodes)
+
+@app.route("/send", methods=["GET", "POST"])
+@requiresAuth
+def send():
+    # 送金
+    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
+    syncBlockchain()
+    if request.method == "POST":
+        sender = hashlib.sha256(session["username"].encode()).hexdigest()
+        recipient = request.form["recipient"]
+        amount = float(request.form["amount"])
+        if blockchain.getBalance(sender) < amount:
+            return render_template("send.html", error="残高が不足しています")
+        blockchain.newTransaction(sender, recipient, amount)
+        return render_template("send.html", success="送金が成功しました")
+    return render_template("send.html")
+
+def syncBlockchainPeriodically():
+    # 定期同期のための関数
+    while True:
+        syncBlockchain()
+        time.sleep(60)

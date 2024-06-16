@@ -3,7 +3,6 @@ import portalocker, json, time
 usersFile = 'data/users.json'
 nodesFile = 'data/nodes.json'
 chainFile = 'data/chain.json'
-blockchainFile = 'data/blockchain.json'
 
 centralServers = [
     'http://192.168.1.39:11380'
