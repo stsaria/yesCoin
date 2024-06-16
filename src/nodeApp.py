@@ -166,7 +166,7 @@ def fullChain():
 def registerWithCentralServers():
     for centralServer in centralServers:
         try:
-            response = requests.post(f"{centralServer}/register")
+            response = requests.get(f"{centralServer}/register")
             if response.status_code == 201:
                 print(f"中央サーバーノードを登録しました サーバー:{centralServer}")
         except requests.ConnectionError:
