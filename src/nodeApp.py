@@ -164,11 +164,9 @@ def fullChain():
     return jsonify(response), 200
 
 def registerWithCentralServers():
-    ip = socket.gethostbyname(socket.gethostname())
-    nodeData = {"ip": ip, "port": 11380}
     for centralServer in centralServers:
         try:
-            response = requests.post(f"{centralServer}/register", json=nodeData)
+            response = requests.post(f"{centralServer}/register")
             if response.status_code == 201:
                 print(f"中央サーバーノードを登録しました サーバー:{centralServer}")
         except requests.ConnectionError:
@@ -176,7 +174,6 @@ def registerWithCentralServers():
 
 def getNodesFromCentralServers():
     nodes = []
-    ip = socket.gethostbyname(socket.gethostname())
     for centralServer in centralServers:
         try:
             response = requests.get(f"{centralServer}/nodes")
@@ -185,11 +182,7 @@ def getNodesFromCentralServers():
                 nodes.extend(newNodes)
         except requests.ConnectionError:
             print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
-    notInMySelfNodes = []
-    for node in nodes:
-        if not node == {"ip": ip, "port": 11380}:
-            notInMySelfNodes.append(node)
-    return notInMySelfNodes
+    return nodes
 
 @app.route('/sync', methods=['GET'])
 def syncBlockchain():

@@ -3,15 +3,15 @@ from etc import *
 
 app = Flask(__name__)
 
-@app.route('/register', methods=['POST'])
+@app.route("/register", methods=["GET"])
 def registerNode():
     global nodes
-    node = request.get_json()
+    node = {"ip": request.remote_addr, "port": 11380}
     if node not in nodes:
         nodes.append(node)
     saveData(nodesFile, nodes)
     return jsonify(nodes), 201
 
-@app.route('/nodes', methods=['GET'])
+@app.route("/nodes", methods=["GET"])
 def getNodes():
     return jsonify(loadData(nodesFile)), 200
