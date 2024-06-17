@@ -159,6 +159,7 @@ def registerWithCentralServers():
             print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
 
 def getNodesFromCentralServers():
+    global nodes
     nodes = []
     for centralServer in centralServers:
         try:
@@ -171,14 +172,19 @@ def getNodesFromCentralServers():
     for node in nodes:
         if not ("ip" in node and "port" in node):
             nodes.remove(node)
+    saveData(nodesFile, nodes)
     return nodes
+
+@app.route('/nodes', methods=['GET'])
+def getNodes():
+    return render_template('nodes.html', nodes=nodes)
 
 @app.route('/users', methods=['GET'])
 def getUsers():
     return jsonify(users)
 
 def syncBlockchain():
-    global blockchain
+    global blockchain, nodes
     nodes = getNodesFromCentralServers()
     if not nodes:
         return "ノードが見つかりませんでした", [{"ip": "x.x.x.x", "port": 11380}]
@@ -205,7 +211,7 @@ def syncBlockchain():
     return message, nodes
 
 def syncUsers():
-    global users
+    global users, nodes
     nodes = getNodesFromCentralServers()
     if not nodes:
         return "ノードが見つかりませんでした", [{"ip": "x.x.x.x", "port": 11380}]
@@ -226,8 +232,8 @@ def syncUsers():
 def send():
     # 送金
     # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
-    requests.get(f"http://localhost:127.0.0.1/sync")
     if request.method == "POST":
+        requests.get(f"http://127.0.0.1:11380/sync")
         sender = hashlib.sha256(session["username"].encode()).hexdigest()
         recipient = request.form["recipient"]
         amount = float(request.form["amount"])
