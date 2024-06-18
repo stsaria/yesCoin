@@ -15,3 +15,8 @@ def registerNode():
 @app.route("/nodes", methods=["GET"])
 def getNodes():
     return jsonify(loadData(nodesFile)), 200
+
+@app.route("/sync", methods=["POST"])
+def sync():
+    syncChain = request.json
+    print(syncChain)
