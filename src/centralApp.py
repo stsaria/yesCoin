@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify
 from etc import *
+from blockchain import BlockChain
 
 app = Flask(__name__)
+chain = []
+
+blockchain = BlockChain()
 
 @app.route("/register", methods=["GET"])
 def registerNode():
@@ -18,5 +22,16 @@ def getNodes():
 
 @app.route("/sync", methods=["POST"])
 def sync():
-    syncChain = request.json
-    print(syncChain)
+    global blockchain, users
+    syncData = request.json
+
+    chain = syncData["chain"]
+    length = len(chain)
+    maxChainLength = len(blockchain.chain)
+    if length > maxChainLength and blockchain.validChain(chain):
+        blockchain.chain = chain
+        saveData(chainFile, blockchain.chain)
+    users = addUniqueKeys(users, syncData["users"])
+
+    saveData(chainFile, chain)
+    return jsonify({"result": 0, "chain": blockchain.chain, "users": users}), 200

@@ -31,5 +31,13 @@ def loadData(filename, empty=[]):
         data = empty
     return data
 
+def addUniqueKeys(d1 : dict, d2 : dict):
+    # 辞書の足し算
+    result = dict(d1)
+    for key, value in d2.items():
+        if not key in result:
+            result[key] = value
+    return result
+
 users = loadData(usersFile, empty={})
 nodes = loadData(nodesFile)
