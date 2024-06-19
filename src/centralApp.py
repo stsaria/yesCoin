@@ -1,20 +1,16 @@
 from flask import Flask, request, jsonify
 from etc import *
 from blockchain import BlockChain
+import requests
 
 app = Flask(__name__)
 chain = []
 
 blockchain = BlockChain()
 
-@app.route("/register", methods=["GET"])
-def registerNode():
-    global nodes
-    node = {"ip": request.remote_addr, "port": 11380}
-    if node not in nodes:
-        nodes.append(node)
-    saveData(nodesFile, nodes)
-    return jsonify(nodes), 201
+@app.route("/", methods=["GET"])
+def getNodes():
+    return jsonify({"hello": "world"}), 200
 
 @app.route("/nodes", methods=["GET"])
 def getNodes():
@@ -34,4 +30,18 @@ def sync():
     users = addUniqueKeys(users, syncData["users"])
 
     saveData(chainFile, chain)
-    return jsonify({"result": 0, "chain": blockchain.chain, "users": users}), 200
+    return jsonify({"chain": blockchain.chain, "users": users, "centralServers": centralServers}), 200
+
+@app.route("/registerCentralServer", methods=["GET"])
+def registerCentralServer():
+    global centralServers
+    try:
+        response = requests.get(f"http://{request.remote_addr}:11380/")
+        if response.status_code == 200 and "hello" in response.json():
+            if response.json()["hello"] == "world":
+                centralServers = addUniqueKeys(centralServers, [f"http://{request.remote_addr}:11380"])
+                saveData(centralServersFile, centralServers)
+                return jsonify({"result": 0}), 200
+        return jsonify({"result": 2}), 500
+    except:
+        return jsonify({"result": 1}), 500

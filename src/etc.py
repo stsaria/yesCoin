@@ -3,8 +3,9 @@ import portalocker, json, time
 usersFile = 'data/users.json'
 nodesFile = 'data/nodes.json'
 chainFile = 'data/chain.json'
+centralServersFile = 'data/centralServers.json'
 
-centralServers = [
+bootstrapCentralServers = [
     'http://192.168.1.39:11380'
 ]
 
@@ -41,3 +42,4 @@ def addUniqueKeys(d1 : dict, d2 : dict):
 
 users = loadData(usersFile, empty={})
 nodes = loadData(nodesFile)
+centralServers = loadData(centralServersFile)
