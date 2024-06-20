@@ -26,17 +26,13 @@ class BlockChain:
         return block
     
     def newTransaction(self, sender, recipient, amount):
-        users = loadData(usersFile)
+        global users
         # 新しいトランザクションを作成してトランザクションリストに追加
         self.transactions.append({
             'sender': sender,
             'recipient': recipient,
             'amount': amount,
         })
-        # 送信者と受信者の残高を更新
-        if sender != "0":  # マイニング報酬でない場合
-            users[sender]['balance'] -= amount
-        users[recipient]['balance'] += amount
         saveData(usersFile, users)
         return self.lastBlock['index'] + 1
     

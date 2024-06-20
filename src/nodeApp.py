@@ -101,32 +101,34 @@ def requiresAuth(f):
         return f(*args, **kwargs)
     return decorated
 
-@app.route('/')
-@requiresAuth
-def index():
-    username = session['username']
-    address = hashlib.sha256(username.encode()).hexdigest()
-    balance = users[address]['balance']
-    return render_template('index.html', username=username, address=address, balance=balance)
-
-@app.route("/mine", methods=["GET"])
-@requiresAuth
-def mine():
-    # マイニングエンドポイント
+def mining(address):
     lastBlock = blockchain.lastBlock
     lastProof = lastBlock["proof"]
     proof = blockchain.proofOfWork(lastProof)
-    address = hashlib.sha256(session["username"].encode()).hexdigest()
     blockchain.newTransaction(
         sender="0",
         recipient=address,
         amount=0.001,
     )
-
     previousHash = blockchain.hash(lastBlock)
     block = blockchain.newBlock(proof, previousHash)
+    return block, blockchain.getBalance(address)
 
-    return render_template("mine.html", block=block, balance=blockchain.getBalance(address))
+@app.route('/')
+@requiresAuth
+def index():
+    username = session['username']
+    address = hashlib.sha256(username.encode()).hexdigest()
+    mining(address)[1]
+    balance = blockchain.getBalance(address)
+    return render_template('index.html', username=username, address=address, balance=balance)
+
+@app.route("/mine", methods=["GET"])
+@requiresAuth
+def mine():
+    address = hashlib.sha256(session["username"].encode()).hexdigest()
+    block, balance = mining(address)
+    return render_template("mine.html", block=block, balance=balance)
 
 @app.route('/chain', methods=['GET'])
 def fullChain():
