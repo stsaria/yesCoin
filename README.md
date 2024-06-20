@@ -17,7 +17,43 @@ YesCoinをダウンロードします
 ```
 ~yesCoin$ pip3 install -r requirements.txt
 ```
-YesCoinを実行します！
+## 実行(ノード)
+YesCoinを実行します
 ```
 ~yesCoin$ python3 src/main.py
+初期中央サーバー(例: http://xxx.com:11380): 
+```
+と出るので、中央サーバーのURLを入力します
+知らない場合は空のままで続行してください（エラーが出ますが、動きます）
+空のままだと動機などの機能は利用できません。
+ブラウザで http://127.0.0.1:11380 にアクセスします。
+登録とかログインとかをすれば、完了です。
+## 実行(中央サーバー)
+※この中央サーバーでグローバルネットの通信をする際にはポート11380の開放が必要です
+centralServer引数付きでYesCoinを実行します
+```
+~yesCoin$ python3 src/main.py centralServer
+初期中央サーバー(例: http://xxx.com:11380): 
+```
+と出るので、知っている中央サーバーのURLを入力します。
+知らない場合は空のままで続行してください（エラーは出ますが、動きます）
+そうすると、自動的に処理が始まるのであとはSystemdなどで実行状態にしておくだけでOK
+### サンプルコード
+```/etc/systemd/system/yesCoin.service
+[Unit]
+Description=Virtual Coin - Yes Coin -
+After=network.target
+
+[Service]
+WorkingDirectory=/home/stsaria/yesCoin centralServer
+
+User=stsaria
+Group=stsaria
+
+Restart=always
+
+ExecStart=/usr/bin/python3 src/main.py
+
+[Install]
+WantedBy=multi-user.target
 ```
