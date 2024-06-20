@@ -55,7 +55,7 @@ def syncPeriodically():
         connect = False
         for centralServer in centralServers:
             try:
-                response = requests.get(f"{centralServer}/centralServers")
+                response = requests.get(f"{centralServer}/getCentralServers")
                 centralServers = addUniqueElements(centralServers, response.json()["centralServers"])
                 connect = True
             except requests.ConnectionError:
