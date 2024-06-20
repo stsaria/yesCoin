@@ -45,14 +45,14 @@ Description=Virtual Coin - Yes Coin -
 After=network.target
 
 [Service]
-WorkingDirectory=/home/stsaria/yesCoin centralServer
+WorkingDirectory=/home/stsaria/yesCoin
 
 User=stsaria
 Group=stsaria
 
 Restart=always
 
-ExecStart=/usr/bin/python3 src/main.py
+ExecStart=/usr/bin/python3 src/main.py centralServer
 
 [Install]
 WantedBy=multi-user.target
