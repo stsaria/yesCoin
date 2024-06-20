@@ -47,6 +47,7 @@ jobs:
         asset_path: dist/yesCoin.exe 
         asset_name: yesCoin-${{ matrix.os }}.exe 
         asset_content_type: application/octet-stream
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload Release Asset for Linux
       if: matrix.os == 'ubuntu-latest'
@@ -56,3 +57,4 @@ jobs:
         asset_path: dist/yesCoin
         asset_name: yesCoin-${{ matrix.os }}
         asset_content_type: application/octet-stream
+        github_token: ${{ secrets.GITHUB_TOKEN }}
