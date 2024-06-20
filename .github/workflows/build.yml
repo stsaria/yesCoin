@@ -36,13 +36,13 @@ jobs:
       with:
         name: executable-${{ matrix.os }}
         path: |
-          dist/yesCoin
+          dist/
 
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: dist/yesCoin
+        asset_path: dist/
         asset_name: yesCoin-${{ matrix.os }}.exe
         asset_content_type: application/octet-stream
