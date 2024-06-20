@@ -29,7 +29,7 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onefile src/main.py　-n　yesCoin
+        pyinstaller --onefile src/main.py -n yesCoin
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
