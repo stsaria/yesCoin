@@ -5,10 +5,6 @@ nodesFile = 'data/nodes.json'
 chainFile = 'data/chain.json'
 centralServersFile = 'data/centralServers.json'
 
-bootstrapCentralServers = [
-    'http://192.168.1.39:11380'
-]
-
 def saveData(filename, data):
     try:
         with open(filename, 'w') as f:
@@ -32,6 +28,10 @@ def loadData(filename, empty=[]):
         data = empty
     return data
 
+def addUniqueElements(a1, a2):
+    result = list(set(a1).union(set(a2)))
+    return result
+
 def addUniqueKeys(d1 : dict, d2 : dict):
     # 辞書の足し算
     result = dict(d1)
@@ -43,3 +43,6 @@ def addUniqueKeys(d1 : dict, d2 : dict):
 users = loadData(usersFile, empty={})
 nodes = loadData(nodesFile)
 centralServers = loadData(centralServersFile)
+if centralServers == []:
+    centralServers.append(input("初期中央サーバー(例: http://xxx.com:11380): "))
+    saveData(centralServersFile, centralServers)

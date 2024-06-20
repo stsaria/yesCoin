@@ -39,7 +39,7 @@ def registerCentralServer():
         response = requests.get(f"http://{request.remote_addr}:11380/")
         if response.status_code == 200 and "hello" in response.json():
             if response.json()["hello"] == "world":
-                centralServers = addUniqueKeys(centralServers, [f"http://{request.remote_addr}:11380"])
+                centralServers = addUniqueElements(centralServers, [f"http://{request.remote_addr}:11380"])
                 saveData(centralServersFile, centralServers)
                 return jsonify({"result": 0}), 200
         return jsonify({"result": 2}), 500

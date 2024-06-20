@@ -15,7 +15,6 @@ def main():
     syncThread = threading.Thread(target=nodeApp.syncBlockchainPeriodically)
     syncThread.daemon = True
     syncThread.start()
-    nodeApp.registerWithCentralServers()
     nodeApp.app.run(host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":

@@ -149,32 +149,6 @@ def fullChain():
     }
     return jsonify(response), 200
 
-def registerWithCentralServers():
-    for centralServer in centralServers:
-        try:
-            response = requests.get(f"{centralServer}/register")
-            if response.status_code == 201:
-                print(f"中央サーバーノードを登録しました サーバー:{centralServer}")
-        except requests.ConnectionError:
-            print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
-
-def getNodesFromCentralServers():
-    global nodes
-    nodes = []
-    for centralServer in centralServers:
-        try:
-            response = requests.get(f"{centralServer}/nodes")
-            if response.status_code == 200:
-                newNodes = response.json()
-                nodes.extend(newNodes)
-        except requests.ConnectionError:
-            print(f"中央サーバーに接続できませんでした サーバー:{centralServer}")
-    for node in nodes:
-        if not ("ip" in node and "port" in node):
-            nodes.remove(node)
-    saveData(nodesFile, nodes)
-    return nodes
-
 @app.route('/nodes', methods=['GET'])
 def getNodes():
     return render_template('nodes.html', nodes=nodes)
@@ -182,50 +156,6 @@ def getNodes():
 @app.route('/users', methods=['GET'])
 def getUsers():
     return jsonify(users)
-
-def syncBlockchain():
-    global blockchain, nodes
-    nodes = getNodesFromCentralServers()
-    if not nodes:
-        return "ノードが見つかりませんでした", [{"ip": "x.x.x.x", "port": 11380}]
-    longestChain = None
-    maxLength = len(blockchain.chain)
-    for node in nodes:
-        try:
-            response = requests.get(f"http://{node['ip']}:{node['port']}/chain")
-            if response.status_code == 200:
-                length = response.json()['length']
-                chain = response.json()['chain']
-                if length > maxLength and blockchain.validChain(chain):
-                    maxLength = length
-                    longestChain = chain
-        except:
-            nodes.remove(node)
-            continue
-    if longestChain:
-        blockchain.chain = longestChain
-        saveData(chainFile, blockchain.chain)
-        message = 'ブロックチェーンが更新されました'
-    else:
-        message = '既存のブロックチェーンが最長です'
-    return message, nodes
-
-def syncUsers():
-    global users, nodes
-    nodes = getNodesFromCentralServers()
-    if not nodes:
-        return "ノードが見つかりませんでした", [{"ip": "x.x.x.x", "port": 11380}]
-    for node in nodes:
-        try:
-            response = requests.get(f"http://{node['ip']}:{node['port']}/users")
-            if response.status_code == 200:
-                remoteUsers = response.json()
-                users.update(remoteUsers)
-        except:
-            nodes.remove(node)
-            continue
-    saveData(usersFile, users)
-    return "ユーザー情報が同期されました", nodes
 
 @app.route("/send", methods=["GET", "POST"])
 @requiresAuth
@@ -245,9 +175,42 @@ def send():
 
 @app.route('/sync', methods=['GET'])
 def sync():
-    blockchainMessage, nodes = syncBlockchain()
-    usersMessage = syncUsers()[0]
-    return render_template('sync.html', blockchainMessage=blockchainMessage, usersMessage=usersMessage, nodes=nodes)
+    # データ同期
+    global centralServers, blockchain, users
+    data = {
+        'chain': blockchain.chain,
+        'users': users
+    }
+    longestChain = None
+    maxLength = len(blockchain.chain)
+    connect = False
+    for centralServer in centralServers:
+        try:
+            # データを送信
+            response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"})
+            if response.status_code == 200:
+                chain = response.json()['chain']
+                chainLength = len(chain)
+                if chainLength > maxLength and blockchain.validChain(chain):
+                    maxLength = chainLength
+                    longestChain = chain
+                users = addUniqueKeys(users, response.json()['users'])
+                centralServers = addUniqueElements(centralServers, response.json()['centralServers'])
+            connect = True
+        except:
+            message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
+            centralServers.remove(centralServer)
+    if connect:
+        message += "エラー: どの中央サーバーにも接続できませんでした。<br/>\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください<br/>\n"
+        print("エラー: どの中央サーバーにも接続できませんでした。\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください")
+    if longestChain:
+        blockchain.chain = longestChain
+        saveData(chainFile, blockchain.chain)
+        message = 'ブロックチェーンが同期されました'
+    else:
+        message = '既存のブロックチェーンが最長です'
+    saveData(usersFile, users)
+    return render_template('sync.html', message=message)
 
 def syncBlockchainPeriodically():
     # 定期同期のための関数
@@ -255,4 +218,4 @@ def syncBlockchainPeriodically():
         time.sleep(5)
         print("Periodic sync")
         requests.get(f"http://127.0.0.1:11380/sync")
-        time.sleep(60)
+        time.sleep(30)
