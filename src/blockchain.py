@@ -26,6 +26,7 @@ class BlockChain:
         return block
     
     def newTransaction(self, sender, recipient, amount):
+        users = loadData(usersFile)
         # 新しいトランザクションを作成してトランザクションリストに追加
         self.transactions.append({
             'sender': sender,
