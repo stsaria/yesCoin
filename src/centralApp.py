@@ -48,6 +48,7 @@ def registerCentralServer():
 
 def syncPeriodically():
     # 定期同期のための関数
+    global centralServers
     while True:
         time.sleep(5)
         print("定期的な同期")
