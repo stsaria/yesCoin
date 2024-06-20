@@ -1,12 +1,8 @@
-name: Build Python Script
+name: Build Python Script on Release
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -23,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'  # 使用するPythonのバージョンを指定
+        python-version: '3.x' 
 
     - name: Install dependencies
       run: |
@@ -40,4 +36,13 @@ jobs:
       with:
         name: executable-${{ matrix.os }}
         path: |
-          dist/your_script  # ビルドされた実行ファイルのパス
+          dist/yesCoin
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: dist/yesCoin
+        asset_name: yesCoin-${{ matrix.os }}.exe
+        asset_content_type: application/octet-stream
