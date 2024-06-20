@@ -9,12 +9,12 @@ chain = []
 blockchain = BlockChain()
 
 @app.route("/", methods=["GET"])
-def getNodes():
+def index():
     return jsonify({"hello": "world"}), 200
 
-@app.route("/nodes", methods=["GET"])
-def getNodes():
-    return jsonify(loadData(nodesFile)), 200
+@app.route("/getCentralServers", methods=["GET"])
+def getCentralServers():
+    return jsonify({"centralServers": loadData(centralServers)}), 200
 
 @app.route("/sync", methods=["POST"])
 def sync():
@@ -45,3 +45,39 @@ def registerCentralServer():
         return jsonify({"result": 2}), 500
     except:
         return jsonify({"result": 1}), 500
+
+def syncPeriodically():
+    # 定期同期のための関数
+    while True:
+        time.sleep(5)
+        print("定期的な同期")
+        connect = False
+        for centralServer in centralServers:
+            try:
+                response = requests.get(f"{centralServer}/centralServers")
+                centralServers = addUniqueElements(centralServers, response.json()["centralServers"])
+                connect = True
+            except:
+                print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
+                centralServers.remove(centralServer)
+        if not connect:
+            print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
+        time.sleep(30)
+
+def reigsterSelfCentralServer():
+    for centralServer in centralServers:
+        try:
+            response = requests.get(f"{centralServer}/registerCentralServer")
+            result = response.json()["result"]
+            if result == 0:
+                connect = True
+                print(f"登録: サーバー: {centralServer}")
+            elif result == 1:
+                print(f"エラー: 不明\nサーバー: {centralServer}")
+            elif result == 2:
+                print(f"エラー: このサーバーは相手のサーバーと合いません\nサーバー: {centralServer}")
+        except:
+            print(f"エラー: 中央サーバーに接続できません\nサーバー: {centralServer}")
+            centralServers.remove(centralServer)
+    if not connect:
+        print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")

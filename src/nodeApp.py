@@ -7,18 +7,6 @@ from blockchain import BlockChain
 app = Flask(__name__)
 app.secret_key = "3141592653589793238"
 
-# 初期ノードリスト（公式ノード）
-bootstrapNodes = [
-    #{"ip": "127.0.0.1", "port": 11380}
-]
-
-# ノードを読み込み
-nodes = loadData(nodesFile)
-
-if not nodes:
-    nodes = bootstrapNodes
-    saveData(nodesFile, nodes)
-
 blockchain = BlockChain()
 
 def generateToken(username, password):
@@ -53,7 +41,6 @@ def login():
         else:
             return render_template("login.html", error="ログインに失敗しました")
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
@@ -149,10 +136,6 @@ def fullChain():
     }
     return jsonify(response), 200
 
-@app.route('/nodes', methods=['GET'])
-def getNodes():
-    return render_template('nodes.html', nodes=nodes)
-
 @app.route('/users', methods=['GET'])
 def getUsers():
     return jsonify(users)
@@ -200,9 +183,9 @@ def sync():
         except:
             message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
-    if connect:
+    if not connect:
         message += "エラー: どの中央サーバーにも接続できませんでした。<br/>\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください<br/>\n"
-        print("エラー: どの中央サーバーにも接続できませんでした。\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください")
+        print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
     if longestChain:
         blockchain.chain = longestChain
         saveData(chainFile, blockchain.chain)
@@ -212,10 +195,10 @@ def sync():
     saveData(usersFile, users)
     return render_template('sync.html', message=message)
 
-def syncBlockchainPeriodically():
+def syncPeriodically():
     # 定期同期のための関数
     while True:
         time.sleep(5)
-        print("Periodic sync")
+        print("定期的な同期")
         requests.get(f"http://127.0.0.1:11380/sync")
         time.sleep(30)

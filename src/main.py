@@ -10,9 +10,12 @@ def main():
     # 定期的に同期するためにスレッドを作る
     if len(sys.argv) > 1:
         if sys.argv[1] == "centralServer":
+            syncThread = threading.Thread(target=centralApp.syncPeriodically)
+            syncThread.daemon = True
+            syncThread.start()
             centralApp.app.run(host='0.0.0.0', port=PORT)
             return
-    syncThread = threading.Thread(target=nodeApp.syncBlockchainPeriodically)
+    syncThread = threading.Thread(target=nodeApp.syncPeriodically)
     syncThread.daemon = True
     syncThread.start()
     nodeApp.app.run(host="0.0.0.0", port=PORT)

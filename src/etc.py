@@ -1,7 +1,6 @@
 import portalocker, json, time
 
 usersFile = 'data/users.json'
-nodesFile = 'data/nodes.json'
 chainFile = 'data/chain.json'
 centralServersFile = 'data/centralServers.json'
 
@@ -41,7 +40,6 @@ def addUniqueKeys(d1 : dict, d2 : dict):
     return result
 
 users = loadData(usersFile, empty={})
-nodes = loadData(nodesFile)
 centralServers = loadData(centralServersFile)
 if centralServers == []:
     centralServers.append(input("初期中央サーバー(例: http://xxx.com:11380): "))
