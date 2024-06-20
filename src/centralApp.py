@@ -60,11 +60,13 @@ def syncPeriodically():
             except:
                 print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
                 centralServers.remove(centralServer)
+        saveData(centralServersFile, centralServers)
         if not connect:
             print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
         time.sleep(30)
 
 def reigsterSelfCentralServer():
+    global centralServers
     for centralServer in centralServers:
         try:
             response = requests.get(f"{centralServer}/registerCentralServer")
@@ -79,5 +81,6 @@ def reigsterSelfCentralServer():
         except:
             print(f"エラー: 中央サーバーに接続できません\nサーバー: {centralServer}")
             centralServers.remove(centralServer)
+        saveData(centralServersFile, centralServers)
     if not connect:
         print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")

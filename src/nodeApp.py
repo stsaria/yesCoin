@@ -183,6 +183,7 @@ def sync():
         except:
             message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
+    saveData(centralServersFile, centralServers)
     if not connect:
         message += "エラー: どの中央サーバーにも接続できませんでした。<br/>\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください<br/>\n"
         print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
