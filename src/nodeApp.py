@@ -167,6 +167,7 @@ def sync():
     longestChain = None
     maxLength = len(blockchain.chain)
     connect = False
+    message = ""
     for centralServer in centralServers:
         try:
             # データを送信
