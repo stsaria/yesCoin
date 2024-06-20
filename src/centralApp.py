@@ -58,7 +58,7 @@ def syncPeriodically():
                 response = requests.get(f"{centralServer}/centralServers")
                 centralServers = addUniqueElements(centralServers, response.json()["centralServers"])
                 connect = True
-            except:
+            except requests.ConnectionError:
                 print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
                 centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
@@ -79,7 +79,7 @@ def reigsterSelfCentralServer():
                 print(f"エラー: 不明\nサーバー: {centralServer}")
             elif result == 2:
                 print(f"エラー: このサーバーは相手のサーバーと合いません\nサーバー: {centralServer}")
-        except:
+        except requests.ConnectionError:
             print(f"エラー: 中央サーバーに接続できません\nサーバー: {centralServer}")
             centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)

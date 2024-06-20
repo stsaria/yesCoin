@@ -180,7 +180,7 @@ def sync():
                 users = addUniqueKeys(users, response.json()['users'])
                 centralServers = addUniqueElements(centralServers, response.json()['centralServers'])
             connect = True
-        except:
+        except requests.ConnectionError:
             message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
     saveData(centralServersFile, centralServers)
