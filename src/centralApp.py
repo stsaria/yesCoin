@@ -71,6 +71,7 @@ def syncPeriodically():
 
 def reigsterSelfCentralServer():
     global centralServers
+    connect = False
     for centralServer in centralServers:
         try:
             response = requests.get(f"{centralServer}/registerCentralServer")
