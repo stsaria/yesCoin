@@ -1,4 +1,4 @@
-import portalocker, json, time
+import portalocker, json, time, re
 
 usersFile = 'data/users.json'
 chainFile = 'data/chain.json'
@@ -38,6 +38,18 @@ def addUniqueKeys(d1 : dict, d2 : dict):
         if not key in result:
             result[key] = value
     return result
+
+def isValidUrl(url):
+    # URLの正規表現パターン
+    regex = re.compile(
+        r'^(?:http|ftp)s?://'  # http:// または https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # ドメイン名
+        r'localhost|'  # localhost
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # IPv4アドレス
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # IPv6アドレス
+        r'(?::\d+)?'  # オプションのポート番号
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return re.match(regex, url) is not None
 
 users = loadData(usersFile, empty={})
 centralServers = loadData(centralServersFile)

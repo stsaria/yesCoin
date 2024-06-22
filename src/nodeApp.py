@@ -158,6 +158,20 @@ def send():
         return render_template("send.html", success="送金が成功しました")
     return render_template("send.html")
 
+@app.route("/sendUrl", methods=["GET"])
+@requiresAuth
+def sendFromUrl():
+    # 送金
+    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
+    requests.get(f"http://127.0.0.1:11380/sync")
+    sender = hashlib.sha256(session["username"].encode()).hexdigest()
+    recipient = request.args.get("recipient", "")
+    amount = float(request.args.get("amount", ""))
+    if blockchain.getBalance(sender) < amount:
+        return render_template("sendUrl.html", error="残高が不足しています")
+    blockchain.newTransaction(sender, recipient, amount)
+    return render_template("sendUrl.html", success="送金が成功しました")
+
 @app.route('/sync', methods=['GET'])
 def sync():
     # データ同期
@@ -186,6 +200,9 @@ def sync():
         except requests.ConnectionError:
             message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
+        except Exception as e:
+            message += f"エラー: {e} サーバー:{centralServer}<br/>\n"
+            if not isValidUrl(centralServer): centralServers.remove(centralServer)
     saveData(centralServersFile, centralServers)
     if not connect:
         message += "エラー: どの中央サーバーにも接続できませんでした。<br/>\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください<br/>\n"
