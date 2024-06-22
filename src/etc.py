@@ -54,5 +54,9 @@ def isValidUrl(url):
 users = loadData(usersFile, empty={})
 centralServers = loadData(centralServersFile)
 if centralServers == []:
-    centralServers.append(input("初期中央サーバー(例: http://xxx.com:11380): "))
-    saveData(centralServersFile, centralServers)
+    try:
+        centralServers.append(input("初期中央サーバー(例: http://xxx.com:11380): "))
+        saveData(centralServersFile, centralServers)
+    except EOFError:
+        # Systemdとかで実行したときに落ちないように
+        pass
