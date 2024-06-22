@@ -54,6 +54,7 @@ def syncPeriodically():
     while True:
         time.sleep(5)
         print("定期的な同期")
+        reigsterSelfCentralServer()
         connect = False
         for centralServer in centralServers:
             try:
