@@ -10,6 +10,7 @@ def main():
     # 定期的に同期するためにスレッドを作る
     if len(sys.argv) > 1:
         if sys.argv[1] == "centralServer":
+            centralApp.reigsterSelfCentralServer()
             syncThread = threading.Thread(target=centralApp.syncPeriodically)
             syncThread.daemon = True
             syncThread.start()
