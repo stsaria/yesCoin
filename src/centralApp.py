@@ -42,13 +42,16 @@ def registerCentralServer():
                 centralServers = addUniqueElements(centralServers, [f"http://{request.remote_addr}:11380"])
                 saveData(centralServersFile, centralServers)
                 return jsonify({"result": 0}), 200
+        print({"result": 2})
         return jsonify({"result": 2}), 500
-    except:
+    except Exception as e:
+        print(e)
         return jsonify({"result": 1}), 500
 
 def syncPeriodically():
     # 定期同期のための関数
     global centralServers
+    message = ""
     while True:
         time.sleep(5)
         print("定期的な同期")
