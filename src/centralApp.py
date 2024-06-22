@@ -51,7 +51,6 @@ def registerCentralServer():
 def syncPeriodically():
     # 定期同期のための関数
     global centralServers
-    message = ""
     while True:
         time.sleep(5)
         print("定期的な同期")
@@ -65,7 +64,6 @@ def syncPeriodically():
                 print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
                 centralServers.remove(centralServer)
             except Exception as e:
-                message += f"エラー: {e} サーバー:{centralServer}<br/>\n"
                 if not isValidUrl(centralServer): centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
         if not connect:
@@ -89,6 +87,8 @@ def reigsterSelfCentralServer():
         except requests.ConnectionError:
             print(f"エラー: 中央サーバーに接続できません\nサーバー: {centralServer}")
             centralServers.remove(centralServer)
+        except Exception as e:
+            if not isValidUrl(centralServer): centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
     if not connect:
         print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
