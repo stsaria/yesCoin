@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from etc import *
 from blockchain import BlockChain
-import requests
+import traceback, requests
 
 app = Flask(__name__)
 chain = []
@@ -44,8 +44,8 @@ def registerCentralServer():
                 return jsonify({"result": 0}), 200
         print({"result": 2})
         return jsonify({"result": 2}), 500
-    except Exception as e:
-        print(e)
+    except:
+        print(traceback.format_exc())
         return jsonify({"result": 1}), 500
 
 def syncPeriodically():
@@ -87,7 +87,7 @@ def reigsterSelfCentralServer():
         except requests.ConnectionError:
             print(f"エラー: 中央サーバーに接続できません\nサーバー: {centralServer}")
             centralServers.remove(centralServer)
-        except Exception as e:
+        except:
             if not isValidUrl(centralServer): centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
     if not connect:
