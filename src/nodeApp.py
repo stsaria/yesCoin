@@ -1,11 +1,15 @@
-import requests, datetime, hashlib, socket, jwt
+import requests, datetime, hashlib, secrets, jwt
 from etc import *
 from flask import Flask, request, make_response, redirect, url_for, session, render_template, jsonify
 from functools import wraps
 from blockchain import BlockChain
 
 app = Flask(__name__)
-app.secret_key = "3141592653589793238"
+secretKey = loadData(secretKeyFile, empty={})
+if not "key" in secretKey:
+    secretKey["key"] = secrets.token_hex(16)
+    saveData(secretKeyFile, secretKey)
+app.secret_key = secretKey["key"]
 
 blockchain = BlockChain()
 

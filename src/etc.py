@@ -1,12 +1,13 @@
 import portalocker, json, time, re
 
-usersFile = 'data/users.json'
-chainFile = 'data/chain.json'
-centralServersFile = 'data/centralServers.json'
+usersFile = "data/users.json"
+chainFile = "data/chain.json"
+centralServersFile = "data/centralServers.json"
+secretKeyFile = "data/secretKey.json"
 
 def saveData(filename, data):
     try:
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             portalocker.lock(f, portalocker.LOCK_EX)
             json.dump(data, f)
             time.sleep(2)
@@ -18,7 +19,7 @@ def loadData(filename, empty=[]):
     # 初期化？
     if "data" in locals(): del data
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             portalocker.lock(f, portalocker.LOCK_EX)
             data = json.load(f)
             time.sleep(2)
@@ -42,13 +43,13 @@ def addUniqueKeys(d1 : dict, d2 : dict):
 def isValidUrl(url):
     # URLの正規表現パターン
     regex = re.compile(
-        r'^(?:http|ftp)s?://'  # http:// または https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # ドメイン名
-        r'localhost|'  # localhost
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # IPv4アドレス
-        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # IPv6アドレス
-        r'(?::\d+)?'  # オプションのポート番号
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r"^(?:http|ftp)s?://"  # http:// または https://
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # ドメイン名
+        r"localhost|"  # localhost
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"  # IPv4アドレス
+        r"\[?[A-F0-9]*:[A-F0-9:]+\]?)"  # IPv6アドレス
+        r"(?::\d+)?"  # オプションのポート番号
+        r"(?:/?|[/?]\S+)$", re.IGNORECASE)
     return re.match(regex, url) is not None
 
 users = loadData(usersFile, empty={})
