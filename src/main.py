@@ -3,8 +3,6 @@ if not os.path.isdir("data"): os.mkdir("data")
 
 import centralApp, nodeApp
 
-PORT = 11380
-
 def main():
     print("YesCoin Start..")
     # 定期的に同期するためにスレッドを作る
@@ -13,12 +11,12 @@ def main():
             syncThread = threading.Thread(target=centralApp.syncPeriodically)
             syncThread.daemon = True
             syncThread.start()
-            centralApp.app.run(host='0.0.0.0', port=PORT)
+            centralApp.app.run(host='0.0.0.0', port=11380)
             return
     syncThread = threading.Thread(target=nodeApp.syncPeriodically)
     syncThread.daemon = True
     syncThread.start()
-    nodeApp.app.run(host="0.0.0.0", port=PORT)
+    nodeApp.app.run(host="0.0.0.0", port=11381)
 
 if __name__ == "__main__":
     main()

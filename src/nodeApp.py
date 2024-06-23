@@ -152,7 +152,7 @@ def send():
     # 送金
     # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
     if request.method == "POST":
-        requests.get(f"http://127.0.0.1:11380/sync")
+        requests.get(f"http://127.0.0.1:11381/sync")
         sender = hashlib.sha256(session["username"].encode()).hexdigest()
         recipient = request.form["recipient"]
         amount = float(request.form["amount"])
@@ -167,7 +167,7 @@ def send():
 def sendFromUrl():
     # 送金
     # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
-    requests.get(f"http://127.0.0.1:11380/sync")
+    requests.get(f"http://127.0.0.1:11381/sync")
     sender = hashlib.sha256(session["username"].encode()).hexdigest()
     recipient = request.args.get("recipient", "")
     amount = float(request.args.get("amount", ""))
