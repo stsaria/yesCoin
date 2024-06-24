@@ -60,3 +60,14 @@ ExecStart=/usr/bin/python3 src/main.py centralServer
 [Install]
 WantedBy=multi-user.target
 ```
+## QRとかで送金する場合
+QRとかGETの通信で送金する際は`sendUrl`を使います。
+以下が例です
+```
+http://xxx.xxx.xxx.xxx:11381/sendUrl?recipient=送金先&amount=総金額
+```
+あと、これの処理にはログインが必要なので、
+```
+http://xxx.xxx.xxx.xxx:11381/login
+```
+のように、ログインのURLのQRコードも貼っておくと便利かもしれません。
