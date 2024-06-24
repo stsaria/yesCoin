@@ -26,14 +26,12 @@ class BlockChain:
         return block
     
     def newTransaction(self, sender, recipient, amount):
-        global users
         # 新しいトランザクションを作成してトランザクションリストに追加
         self.transactions.append({
             'sender': sender,
             'recipient': recipient,
             'amount': amount,
         })
-        saveData(usersFile, users)
         return self.lastBlock['index'] + 1
     
     @staticmethod

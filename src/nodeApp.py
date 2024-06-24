@@ -199,8 +199,10 @@ def sync():
                     maxLength = chainLength
                     longestChain = chain
                 users = addUniqueKeys(users, response.json()['users'])
-                centralServers = addUniqueElements(centralServers, response.json()['centralServers'])
-            connect = True
+                centralServers = addUniqueElements(centralServers, response.json()['centralServers'], url=True)
+                connect = True
+            else:
+                message += f"エラー: エラーレスポンスが返されました サーバー:{centralServer}<br/>\n"
         except requests.ConnectionError:
             message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
@@ -210,13 +212,13 @@ def sync():
     saveData(centralServersFile, centralServers)
     if not connect:
         message += "エラー: どの中央サーバーにも接続できませんでした。<br/>\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください<br/>\n"
-        print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
     if longestChain:
         blockchain.chain = longestChain
         saveData(chainFile, blockchain.chain)
         message = 'ブロックチェーンが同期されました'
     else:
         message = '既存のブロックチェーンが最長です'
+    print(message.strip("<br/>"))
     saveData(usersFile, users)
     return render_template('sync.html', message=message)
 
@@ -225,5 +227,5 @@ def syncPeriodically():
     while True:
         time.sleep(5)
         print("定期的な同期")
-        requests.get(f"http://127.0.0.1:11380/sync")
+        requests.get(f"http://127.0.0.1:11381/sync")
         time.sleep(30)

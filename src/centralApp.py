@@ -59,7 +59,7 @@ def syncPeriodically():
         for centralServer in centralServers:
             try:
                 response = requests.get(f"{centralServer}/getCentralServers")
-                centralServers = addUniqueElements(centralServers, response.json()["centralServers"])
+                centralServers = addUniqueElements(centralServers, response.json()["centralServers"], url=True)
                 connect = True
             except requests.ConnectionError:
                 print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")

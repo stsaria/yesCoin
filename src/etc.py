@@ -28,8 +28,12 @@ def loadData(filename, empty=[]):
         data = empty
     return data
 
-def addUniqueElements(a1, a2):
-    result = list(set(a1).union(set(a2)))
+def addUniqueElements(a1, a2, url=False):
+    result = a1
+    for i in a2:
+        if url and i[-1] == "/": i = i.rstrip("/")
+        if not i in result:
+            result.append(i)
     return result
 
 def addUniqueKeys(d1 : dict, d2 : dict):
