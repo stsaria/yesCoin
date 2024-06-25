@@ -50,6 +50,7 @@ class BlockChain:
         proof = 0
         while not self.validProof(lastProof, proof):
             proof += 1
+        return proof
 
     def validProof(self, lastProof, proof):
         # ハッシュが正しいか判別
