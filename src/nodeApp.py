@@ -18,7 +18,7 @@ def generateToken(username, password):
     token = jwt.encode({
         "username": username,
         "password": password, 
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=48)
     }, app.secret_key, algorithm="HS256")
     return token
 
