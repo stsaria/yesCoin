@@ -1,12 +1,18 @@
-<header>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-            <h1 class="navbar-brand">YesCoin</h1>
-            <div class="d-flex" id="requiresAuth">
-                <a href="logout">Logout</a>
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+            <h1><a class="nav-link" href="/">YesCoin</a></h1>
+            <div class="d-flex">
+                <div class="coin">YC</div>
+            </div>
+            <div class="d-flex">
+                <ul class="navbar-nav">  
+                    <li class="nav-item">
+                        <a class="nav-link" href="logout">Logout</a>
+                    </li>
+                </ul>
             </div>
         </div>
-    </nav>
-</header>
+    </div>
+</nav>
 {% block main %}
 {% endblock %}
