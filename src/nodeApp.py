@@ -30,6 +30,33 @@ def authenticate(username, password):
         return True
     return False
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    # ユーザー登録エンドポイント
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if authenticate(username, password):
+            return render_template("register.html", error="登録に失敗しました\n既に登録されています")
+        
+        # ユーザー名のハッシュ（アドレス）で保存
+        address = hashlib.sha256(username.encode()).hexdigest()
+        hashedPassword = hashlib.sha256(password.encode()).hexdigest()
+        users[address] = {
+            'password': hashedPassword,
+            'balance': 0  # 初期残高を0に設定
+        }
+        saveData(usersFile, users)
+        
+        # indexに移動するために認証しておく
+        if authenticate(username, password):
+            response = make_response(redirect(url_for("index")))
+            token = generateToken(username, password)
+            response.set_cookie("token", token)
+            return response
+        return redirect(url_for("login"))
+    return render_template("register.html")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     # ログインエンドポイント
@@ -88,36 +115,18 @@ def mining(address):
         amount=0.001,
     )
     previousHash = blockchain.hash(lastBlock)
-    block = blockchain.newBlock(proof, previousHash)
+    
+    currentTime = datetime.datetime.now()
+    blockCreateTime = datetime.datetime.strptime(lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+    if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
+        # 最後のブロックが作られた時間と今の時間が10分以内なら
+        # 最後のブロックのトランザクション配列にappendする。
+        blockchain.chain[-1]["transactions"].append(blockchain.transactions[-1])
+        block = blockchain.chain[-1]
+        saveData(chainFile, blockchain.chain)
+    else:
+        block = blockchain.newBlock(proof, previousHash)
     return block, blockchain.getBalance(address)
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    # ユーザー登録エンドポイント
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        if authenticate(username, password):
-            return render_template("register.html", error="登録に失敗しました\n既に登録されています")
-        
-        # ユーザー名のハッシュ（アドレス）で保存
-        address = hashlib.sha256(username.encode()).hexdigest()
-        hashedPassword = hashlib.sha256(password.encode()).hexdigest()
-        users[address] = {
-            'password': hashedPassword,
-            'balance': 0  # 初期残高を0に設定
-        }
-        saveData(usersFile, users)
-        
-        # indexに移動するために認証しておく
-        if authenticate(username, password):
-            response = make_response(redirect(url_for("index")))
-            token = generateToken(username, password)
-            response.set_cookie("token", token)
-            mining(address)
-            return response
-        return redirect(url_for("login"))
-    return render_template("register.html")
 
 @app.route('/')
 @requiresAuth
@@ -197,15 +206,27 @@ def sync():
 @requiresAuth
 def send():
     # 送金
-    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
     if request.method == "POST":
+        # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
         sync()
         sender = hashlib.sha256(session["username"].encode()).hexdigest()
         recipient = request.form["recipient"]
         amount = float(request.form["amount"])
         if blockchain.getBalance(sender) < amount:
             return render_template("send.html", error="残高が不足しています")
+
+        lastBlock = blockchain.lastBlock
         blockchain.newTransaction(sender, recipient, amount)
+        
+        currentTime = datetime.datetime.now()
+        blockCreateTime = datetime.datetime.strptime(lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+        if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
+            # 最後のブロックが作られた時間と今の時間が10分以内なら
+            # 最後のブロックのトランザクション配列にappendする。
+            blockchain.chain[-1]["transactions"].append(blockchain.transactions[-1])
+            saveData(chainFile, blockchain.chain)
+        else:
+            blockchain.newBlock(None)
         return render_template("send.html", success="送金が成功しました")
     return render_template("send.html")
 
