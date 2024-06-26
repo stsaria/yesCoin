@@ -24,12 +24,12 @@ def sync():
     chain = syncData["chain"]
     length = len(chain)
     maxChainLength = len(blockchain.chain)
+    print(maxChainLength)
     if length > maxChainLength and blockchain.validChain(chain):
         blockchain.chain = chain
         saveData(chainFile, blockchain.chain)
     users = addUniqueKeys(users, syncData["users"])
-
-    saveData(chainFile, chain)
+    saveData(usersFile, users)
     return jsonify({"chain": blockchain.chain, "users": users, "centralServers": centralServers}), 200
 
 @app.route("/registerCentralServer", methods=["GET"])
