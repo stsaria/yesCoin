@@ -170,7 +170,7 @@ def sync():
     for centralServer in centralServers:
         try:
             # データを送信
-            response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"})
+            response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"}, timeout=3.5)
             if response.status_code == 200:
                 maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
@@ -186,6 +186,8 @@ def sync():
         except requests.ConnectionError:
             message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
+        except requests.Timeout:
+            message += f"エラー: 中央サーバーとの接続でタイムアウトしました サーバー:{centralServer}<br/>\n"
         except Exception as e:
             message += f"エラー: {e} サーバー:{centralServer}<br/>\n"
             if not isValidUrl(centralServer): centralServers.remove(centralServer)
