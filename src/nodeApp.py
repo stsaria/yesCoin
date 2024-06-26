@@ -156,7 +156,6 @@ def sync():
         'users': users
     }
     longestChain = None
-    maxLength = len(blockchain.chain)
     connect = False
     message = ""
     for centralServer in centralServers:
@@ -164,11 +163,12 @@ def sync():
             # データを送信
             response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"})
             if response.status_code == 200:
+                maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
                 chainLength = len(chain)
                 if chainLength > maxLength and blockchain.validChain(chain):
                     maxLength = chainLength
-                    longestChain = chain
+                    blockchain.chain = longestChain = chain
                 users = addUniqueKeys(users, response.json()['users'])
                 centralServers = addUniqueElements(centralServers, response.json()['centralServers'], url=True)
                 connect = True

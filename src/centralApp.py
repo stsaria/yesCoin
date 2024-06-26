@@ -48,29 +48,6 @@ def registerCentralServer():
         print(traceback.format_exc())
         return jsonify({"result": 1}), 500
 
-def syncPeriodically():
-    # 定期同期のための関数
-    global centralServers
-    while True:
-        time.sleep(5)
-        print("定期的な同期")
-        reigsterSelfCentralServer()
-        connect = False
-        for centralServer in centralServers:
-            try:
-                response = requests.get(f"{centralServer}/getCentralServers")
-                centralServers = addUniqueElements(centralServers, response.json()["centralServers"], url=True)
-                connect = True
-            except requests.ConnectionError:
-                print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
-                centralServers.remove(centralServer)
-            except Exception as e:
-                if not isValidUrl(centralServer): centralServers.remove(centralServer)
-        saveData(centralServersFile, centralServers)
-        if not connect:
-            print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
-        time.sleep(30)
-
 def reigsterSelfCentralServer():
     global centralServers
     connect = False
@@ -93,3 +70,26 @@ def reigsterSelfCentralServer():
         saveData(centralServersFile, centralServers)
     if not connect:
         print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
+
+def syncPeriodically():
+    # 定期同期のための関数
+    global centralServers
+    while True:
+        time.sleep(5)
+        print("定期的な同期")
+        reigsterSelfCentralServer()
+        connect = False
+        for centralServer in centralServers:
+            try:
+                response = requests.get(f"{centralServer}/getCentralServers")
+                centralServers = addUniqueElements(centralServers, response.json()["centralServers"], url=True)
+                connect = True
+            except requests.ConnectionError:
+                print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
+                centralServers.remove(centralServer)
+            except Exception as e:
+                if not isValidUrl(centralServer): centralServers.remove(centralServer)
+        saveData(centralServersFile, centralServers)
+        if not connect:
+            print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
+        time.sleep(30)
