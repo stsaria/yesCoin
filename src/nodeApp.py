@@ -54,33 +54,6 @@ def logout():
     response.delete_cookie("token")
     return response
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    # ユーザー登録エンドポイント
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        if authenticate(username, password):
-            return render_template("register.html", error="登録に失敗しました\n既に登録されています")
-        
-        # ユーザー名のハッシュ（アドレス）で保存
-        address = hashlib.sha256(username.encode()).hexdigest()
-        hashedPassword = hashlib.sha256(password.encode()).hexdigest()
-        users[address] = {
-            'password': hashedPassword,
-            'balance': 0  # 初期残高を0に設定
-        }
-        saveData(usersFile, users)
-        
-        # indexに移動するために認証しておく
-        if authenticate(username, password):
-            response = make_response(redirect(url_for("index")))
-            token = generateToken(username, password)
-            response.set_cookie("token", token)
-            return response
-        return redirect(url_for("login"))
-    return render_template("register.html")
-
 def requiresAuth(f):
     # 認証が必要なエンドポイント用のデコレータ
     global session
@@ -118,12 +91,39 @@ def mining(address):
     block = blockchain.newBlock(proof, previousHash)
     return block, blockchain.getBalance(address)
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    # ユーザー登録エンドポイント
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if authenticate(username, password):
+            return render_template("register.html", error="登録に失敗しました\n既に登録されています")
+        
+        # ユーザー名のハッシュ（アドレス）で保存
+        address = hashlib.sha256(username.encode()).hexdigest()
+        hashedPassword = hashlib.sha256(password.encode()).hexdigest()
+        users[address] = {
+            'password': hashedPassword,
+            'balance': 0  # 初期残高を0に設定
+        }
+        saveData(usersFile, users)
+        
+        # indexに移動するために認証しておく
+        if authenticate(username, password):
+            response = make_response(redirect(url_for("index")))
+            token = generateToken(username, password)
+            response.set_cookie("token", token)
+            mining(address)
+            return response
+        return redirect(url_for("login"))
+    return render_template("register.html")
+
 @app.route('/')
 @requiresAuth
 def index():
     username = session['username']
     address = hashlib.sha256(username.encode()).hexdigest()
-    mining(address)[1]
     balance = blockchain.getBalance(address)
     return render_template('index.html', username=username, address=address, balance=balance)
 
