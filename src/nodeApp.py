@@ -1,4 +1,4 @@
-import requests, datetime, hashlib, secrets, jwt
+import requests, datetime, hashlib, secrets, jwt, os
 from etc import *
 from flask import Flask, request, make_response, redirect, url_for, session, render_template, jsonify
 from functools import wraps
@@ -130,6 +130,8 @@ def index():
 @app.route("/mine", methods=["GET"])
 @requiresAuth
 def mine():
+    if os.path.isfile("DONTMINING"):
+        return render_template("cantMining.html")
     address = hashlib.sha256(session["username"].encode()).hexdigest()
     block, balance = mining(address)
     return render_template("mine.html", block=block, balance=balance)
@@ -146,37 +148,6 @@ def fullChain():
 def getUsers():
     return jsonify(users)
 
-@app.route("/send", methods=["GET", "POST"])
-@requiresAuth
-def send():
-    # 送金
-    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
-    if request.method == "POST":
-        requests.get(f"http://127.0.0.1:11381/sync")
-        sender = hashlib.sha256(session["username"].encode()).hexdigest()
-        recipient = request.form["recipient"]
-        amount = float(request.form["amount"])
-        if blockchain.getBalance(sender) < amount:
-            return render_template("send.html", error="残高が不足しています")
-        blockchain.newTransaction(sender, recipient, amount)
-        return render_template("send.html", success="送金が成功しました")
-    return render_template("send.html")
-
-@app.route("/sendUrl", methods=["GET"])
-@requiresAuth
-def sendFromUrl():
-    # 送金
-    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
-    requests.get(f"http://127.0.0.1:11381/sync")
-    sender = hashlib.sha256(session["username"].encode()).hexdigest()
-    recipient = request.args.get("recipient", "")
-    amount = float(request.args.get("amount", ""))
-    if blockchain.getBalance(sender) < amount:
-        return render_template("sendUrl.html", error="残高が不足しています")
-    blockchain.newTransaction(sender, recipient, amount)
-    return render_template("sendUrl.html", success="送金が成功しました")
-
-@app.route('/sync', methods=['GET'])
 def sync():
     # データ同期
     global centralServers, blockchain, users
@@ -220,12 +191,48 @@ def sync():
         message = '既存のブロックチェーンが最長です'
     print(message.strip("<br/>"))
     saveData(usersFile, users)
-    return render_template('sync.html', message=message)
+    return message
+
+@app.route("/send", methods=["GET", "POST"])
+@requiresAuth
+def send():
+    # 送金
+    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
+    if request.method == "POST":
+        sync()
+        sender = hashlib.sha256(session["username"].encode()).hexdigest()
+        recipient = request.form["recipient"]
+        amount = float(request.form["amount"])
+        if blockchain.getBalance(sender) < amount:
+            return render_template("send.html", error="残高が不足しています")
+        blockchain.newTransaction(sender, recipient, amount)
+        return render_template("send.html", success="送金が成功しました")
+    return render_template("send.html")
+
+@app.route("/sendUrl", methods=["GET"])
+@requiresAuth
+def sendFromUrl():
+    # 送金
+    # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
+    sync()
+    sender = hashlib.sha256(session["username"].encode()).hexdigest()
+    recipient = request.args.get("recipient", "")
+    amount = float(request.args.get("amount", ""))
+    if blockchain.getBalance(sender) < amount:
+        return render_template("sendUrl.html", error="残高が不足しています")
+    blockchain.newTransaction(sender, recipient, amount)
+    return render_template("sendUrl.html", success="送金が成功しました")
+
+@app.route('/sync', methods=['GET'])
+def syncPage():
+    if os.path.isfile("DONTMANUALSYNC"):
+        return render_template("cantManualSync.html")
+    return render_template('sync.html', message=sync())
 
 def syncPeriodically():
     # 定期同期のための関数
     while True:
         time.sleep(5)
         print("定期的な同期")
-        requests.get(f"http://127.0.0.1:11381/sync")
+        sync()
         time.sleep(30)

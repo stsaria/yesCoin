@@ -2,7 +2,7 @@ import datetime, hashlib, json
 from etc import *
 
 class BlockChain:
-    def __init__(self, miningDifficulty = 15):
+    def __init__(self, miningDifficulty = 7):
         # チェーンデータの読み込み
         self.chain = loadData(chainFile)
         self.transactions = []

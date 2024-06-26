@@ -1,6 +1,7 @@
 import threading, sys, os
-if not os.path.isdir("data"): os.mkdir("data")
-
+mkDirs=["data", "config"]
+for i in mkDirs:
+    os.makedirs(i, exist_ok=True)
 import centralApp, nodeApp
 
 def main():

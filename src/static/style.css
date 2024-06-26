@@ -2,7 +2,7 @@
     color: white !important;
 }
 
-h1 {
+.title {
     font-size: 4rem;
     font-weight: bold;
     background: linear-gradient(45deg, #ff6b6b, #f8e71c);

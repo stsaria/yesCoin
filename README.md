@@ -71,3 +71,8 @@ http://xxx.xxx.xxx.xxx:11381/sendUrl?recipient=送金先&amount=総金額
 http://xxx.xxx.xxx.xxx:11381/login
 ```
 のように、ログインのURLのQRコードも貼っておくと便利かもしれません。
+## 制限
+サーバーによっては手動の同期や、マイニングを禁止した場合もあるかもしれません。
+
+その場合は
+`DONTMINING`や`DONTMANUALSYNC`ファイルをyesCoinの直下に置くことによって禁止できます。
