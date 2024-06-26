@@ -166,7 +166,7 @@ def sync():
                 maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
                 chainLength = len(chain)
-                if chainLength > maxLength and blockchain.validChain(chain):
+                if chainLength > maxLength:
                     maxLength = chainLength
                     blockchain.chain = longestChain = chain
                 users = addUniqueKeys(users, response.json()['users'])
