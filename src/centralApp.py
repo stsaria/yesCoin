@@ -25,7 +25,7 @@ def sync():
     length = len(chain)
     maxChainLength = len(blockchain.chain)
     print(maxChainLength)
-    if length > maxChainLength and blockchain.validChain(chain):
+    if length > maxChainLength:
         blockchain.chain = chain
         saveData(chainFile, blockchain.chain)
     users = addUniqueKeys(users, syncData["users"])

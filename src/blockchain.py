@@ -68,10 +68,3 @@ class BlockChain:
                 if transaction['recipient'] == address:
                     balance += transaction['amount']
         return balance
-    
-    @classmethod
-    def validChain(cls, chain):
-        for i in range(1, len(chain)):
-            if chain[i]['previousHash'] != cls.hash(chain[i - 1]):
-                return False
-        return True
