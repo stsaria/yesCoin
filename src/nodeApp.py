@@ -105,29 +105,6 @@ def requiresAuth(f):
         return f(*args, **kwargs)
     return decorated
 
-def mining(address):
-    lastBlock = blockchain.lastBlock
-    lastProof = lastBlock["proof"]
-    proof = blockchain.proofOfWork(lastProof)
-    blockchain.newTransaction(
-        sender="0",
-        recipient=address,
-        amount=0.001,
-    )
-    previousHash = blockchain.hash(lastBlock)
-    
-    currentTime = datetime.datetime.now()
-    blockCreateTime = datetime.datetime.strptime(lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
-    if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
-        # 最後のブロックが作られた時間と今の時間が10分以内なら
-        # 最後のブロックのトランザクション配列にappendする。
-        blockchain.chain[-1]["transactions"].append(blockchain.transactions[-1])
-        block = blockchain.chain[-1]
-        saveData(chainFile, blockchain.chain)
-    else:
-        block = blockchain.newBlock(proof, previousHash)
-    return block, blockchain.getBalance(address)
-
 @app.route('/')
 @requiresAuth
 def index():
@@ -148,7 +125,8 @@ def mine():
     if os.path.isfile("DONTMINING"):
         return render_template("cantMining.html")
     address = hashlib.sha256(session["username"].encode()).hexdigest()
-    block, balance = mining(address)
+    block = blockchain.mining(recipient=address)
+    balance = blockchain.getBalance(address)
     return render_template("mine.html", block=block, balance=balance)
 
 @app.route('/chain', methods=['GET'])
@@ -181,6 +159,7 @@ def sync():
                 maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
                 chainLength = len(chain)
+                print(maxLength, chainLength)
                 if chainLength > maxLength and blockchain.validChain(chain):
                     maxLength = chainLength
                     blockchain.chain = longestChain = chain
@@ -222,19 +201,7 @@ def send():
         amount = float(request.form["amount"])
         if blockchain.getBalance(sender) < amount:
             return render_template("send.html", error="残高が不足しています")
-
-        lastBlock = blockchain.lastBlock
         blockchain.newTransaction(sender, recipient, amount)
-        
-        currentTime = datetime.datetime.now()
-        blockCreateTime = datetime.datetime.strptime(lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
-        if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
-            # 最後のブロックが作られた時間と今の時間が10分以内なら
-            # 最後のブロックのトランザクション配列にappendする。
-            blockchain.chain[-1]["transactions"].append(blockchain.transactions[-1])
-            saveData(chainFile, blockchain.chain)
-        else:
-            blockchain.newBlock(None)
         return render_template("send.html", success="送金が成功しました")
     return render_template("send.html")
 
@@ -243,13 +210,18 @@ def send():
 def sendFromUrl():
     # 送金
     # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
-    sync()
     sender = hashlib.sha256(session["username"].encode()).hexdigest()
-    recipient = request.args.get("recipient", "")
     amount = float(request.args.get("amount", ""))
     if blockchain.getBalance(sender) < amount:
         return render_template("sendUrl.html", error="残高が不足しています")
-    blockchain.newTransaction(sender, recipient, amount)
+    requests.post(
+        "http://127.0.0.1:11381/send",
+        {
+            "recipient": request.args.get("recipient", ""),
+            "amount": amount
+        },
+        params={"username": sender}
+    )
     return render_template("sendUrl.html", success="送金が成功しました")
 
 @app.route('/sync', methods=['GET'])

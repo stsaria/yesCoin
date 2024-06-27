@@ -9,6 +9,7 @@ class BlockChain:
         self.difficulty = miningDifficulty # 難易度を設定
         if not self.chain:
             self.newBlock(100, previousHash='1')
+    
     def newBlock(self, proof, previousHash=None):
         block = {
             'index': len(self.chain) + 1,
@@ -25,14 +26,42 @@ class BlockChain:
         saveData(chainFile, self.chain)
         return block
     
-    def newTransaction(self, sender, recipient, amount):
-        # 新しいトランザクションを作成してトランザクションリストに追加
+    def mining(self, address, newBlock=True):
+        lastBlock = self.lastBlock
+        lastProof = lastBlock["proof"]
+        proof = self.proofOfWork(lastProof)
         self.transactions.append({
-            'sender': sender,
-            'recipient': recipient,
-            'amount': amount,
+            "sender": "0",
+            "recipient": address,
+            "amount": 0.001,
         })
-        return self.lastBlock['index'] + 1
+        previousHash = self.hash(lastBlock)
+        block = self.chain[-1]
+        if newBlock:
+            block = self.newBlock(proof, previousHash)
+        return block
+    
+    def newTransaction(self, sender=None, recipient="", amount=None):
+        # 新しいトランザクションを作成してトランザクションリストに追加
+        if not None in [sender, amount]:  
+            self.transactions.append({
+                'sender': sender,
+                'recipient': recipient,
+                'amount': amount,
+            })
+        currentTime = datetime.datetime.now()
+        blockCreateTime = datetime.datetime.strptime(self.lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+        if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
+            # 最後のブロックが作られた時間と今の時間が10分以内なら
+            # 最後のブロックのトランザクション配列にappendする。
+            if sender == "0":
+                self.mining(recipient, newBlock=False)
+            block = self.chain[-1]
+            self.chain[-1]["transactions"].append(self.transactions[-1])
+            saveData(chainFile, self.chain)
+        else:
+            block = self.mining(recipient)
+        return self.lastBlock['index'] + 1, block
     
     @staticmethod
     def hash(block):
@@ -70,7 +99,14 @@ class BlockChain:
         return balance
     
     def validChain(self, chain):
+        # チェーンが有効かどうかを確認する
         for i in range(1, len(chain)):
-            if chain[i]['previousHash'] == self.hash(chain[i - 1]):
-                return True
-        return False
+            currentBlock = chain[i]
+            previousBlock = chain[i - 1]
+            if currentBlock['previousHash'] != self.hash(previousBlock):
+                print(f"Block {i} has incorrect previous hash.")
+                return False
+            elif not self.validProof(previousBlock['proof'], currentBlock['proof']):
+                print(f"Block {i} has invalid proof of work.")
+                return False
+        return True
