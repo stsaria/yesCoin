@@ -11,6 +11,7 @@
 {% block main %}
 <body class="container-fluid">
     <h1>あなたのトランザクション</h1>
+    <p>あなたのアドレス:<kbd>{{ address }}</kbd></p>
     <p>マイニングを含みません</p>
     <ul>
         {% for block in chain %}
