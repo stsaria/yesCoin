@@ -68,3 +68,9 @@ class BlockChain:
                 if transaction['recipient'] == address:
                     balance += transaction['amount']
         return balance
+    
+    def validChain(self, chain):
+        for i in range(1, len(chain)):
+            if chain[i]['previousHash'] == self.hash(chain[i - 1]):
+                return True
+        return False
