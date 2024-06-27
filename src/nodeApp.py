@@ -136,6 +136,12 @@ def index():
     balance = blockchain.getBalance(address)
     return render_template('index.html', username=username, address=address, balance=balance)
 
+@app.route("/yourTransactions")
+def yourTransactions():
+    username = session['username']
+    address = hashlib.sha256(username.encode()).hexdigest()
+    return render_template("yourTransactions.html", chain=blockchain.chain, address=address)
+
 @app.route("/mine", methods=["GET"])
 @requiresAuth
 def mine():
