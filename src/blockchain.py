@@ -106,9 +106,6 @@ class BlockChain:
             if currentBlock['previousHash'] != self.hash(previousBlock):
                 print(f"Block {currentBlock} has incorrect previous hash.")
                 return False
-            elif not self.validProof(previousBlock['proof'], currentBlock['proof']) and currentBlock['proof'] != None:
-                print(f"Block {currentBlock} has invalid proof of work.")
-                return False
             if currentBlock['proof'] == None:
                 print("警告:このチェーンはnullのproofがあります")
         return True
