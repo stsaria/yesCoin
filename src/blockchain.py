@@ -105,7 +105,7 @@ class BlockChain:
             currentBlock = chain[i]
             previousBlock = chain[i - 1]
             if currentBlock['previousHash'] != self.hash(previousBlock):
-                print(f"Block {currentBlock} has incorrect previous hash.")
+                print(f"Block {i} has incorrect previous hash.")
                 okChain[i]["transactions"] = []
             if currentBlock['proof'] == None:
                 print(f"警告:このブロック({i})はnullのproofがあります")
