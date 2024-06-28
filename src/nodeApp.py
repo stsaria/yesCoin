@@ -158,11 +158,11 @@ def sync():
             if response.status_code == 200:
                 maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
-                chainLength = len(chain)
-                print(maxLength, chainLength)
-                if chainLength > maxLength and blockchain.validChain(chain):
-                    maxLength = chainLength
-                    blockchain.chain = longestChain = chain
+                okChain = blockchain.validChain(chain)
+                print(maxLength, okChain)
+                if len(okChain) > maxLength:
+                    maxLength = okChain
+                    blockchain.chain = longestChain = okChain
                 users = addUniqueKeys(users, response.json()['users'])
                 centralServers = addUniqueElements(centralServers, response.json()['centralServers'], url=True)
                 connect = True

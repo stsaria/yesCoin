@@ -100,12 +100,13 @@ class BlockChain:
     
     def validChain(self, chain):
         # チェーンが有効かどうかを確認する
+        okChain = chain
         for i in range(1, len(chain)):
             currentBlock = chain[i]
             previousBlock = chain[i - 1]
             if currentBlock['previousHash'] != self.hash(previousBlock):
                 print(f"Block {currentBlock} has incorrect previous hash.")
-                return False
+                okChain[i]["transactions"] = []
             if currentBlock['proof'] == None:
-                print("警告:このチェーンはnullのproofがあります")
-        return True
+                print(f"警告:このブロック({i})はnullのproofがあります")
+        return okChain
