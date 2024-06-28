@@ -159,7 +159,7 @@ def sync():
                 maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
                 okChain = blockchain.validChain(chain)
-                print(maxLength, okChain)
+                print(maxLength, len(okChain))
                 if len(okChain) > maxLength:
                     maxLength = okChain
                     blockchain.chain = longestChain = okChain
