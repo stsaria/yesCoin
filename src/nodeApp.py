@@ -125,7 +125,7 @@ def mine():
     if os.path.isfile("DONTMINING"):
         return render_template("cantMining.html")
     address = hashlib.sha256(session["username"].encode()).hexdigest()
-    block = blockchain.mining(recipient=address)
+    block = blockchain.newTransaction(recipient=address)[1]
     balance = blockchain.getBalance(address)
     return render_template("mine.html", block=block, balance=balance)
 

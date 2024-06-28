@@ -54,10 +54,10 @@ class BlockChain:
         if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
             # 最後のブロックが作られた時間と今の時間が10分以内なら
             # 最後のブロックのトランザクション配列にappendする。
-            if sender == "0":
+            if None in [sender, amount]:
                 self.mining(recipient, newBlock=False)
-            block = self.chain[-1]
             self.chain[-1]["transactions"].append(self.transactions[-1])
+            block = self.chain[-1]
             saveData(chainFile, self.chain)
         else:
             block = self.mining(recipient)
