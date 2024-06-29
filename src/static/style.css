@@ -2,17 +2,6 @@
     color: white !important;
 }
 
-.title {
-    font-size: 4rem;
-    font-weight: bold;
-    background: linear-gradient(45deg, #ff6b6b, #f8e71c);
-    -webkit-background-clip: text; /* WebKitベースのブラウザ用 */
-    background-clip: text; /* 標準プロパティ */
-    color: transparent; /* テキストの色を透明にする */
-    animation: text-glow 2s infinite alternate, text-animation 5s infinite;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
-}
-
 .coin {
     display: flex;
     justify-content: center;
@@ -32,25 +21,4 @@
     0%, 20%, 80%, 100% { transform: translateX(-100%); background: gold; }
     40%, 60% { transform: translateX(100%); background: steelblue; }
     50% { transform: translateX(0); background: copper; }
-}
-
-@keyframes text-glow {
-    from {
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
-    }
-    to {
-        text-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 30px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.8);
-    }
-}
-
-@keyframes text-animation {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-    }
 }
