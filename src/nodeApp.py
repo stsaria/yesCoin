@@ -210,18 +210,13 @@ def send():
 def sendFromUrl():
     # 送金
     # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
+    sync()
     sender = hashlib.sha256(session["username"].encode()).hexdigest()
-    amount = float(request.args.get("amount", ""))
+    recipient = request.args.get("recipient")
+    amount = float(request.args.get("amount"))
     if blockchain.getBalance(sender) < amount:
         return render_template("sendUrl.html", error="残高が不足しています")
-    requests.post(
-        "http://127.0.0.1:11381/send",
-        {
-            "recipient": request.args.get("recipient", ""),
-            "amount": amount
-        },
-        params={"username": sender}
-    )
+    blockchain.newTransaction(sender, recipient, amount)
     return render_template("sendUrl.html", success="送金が成功しました")
 
 @app.route('/sync', methods=['GET'])
