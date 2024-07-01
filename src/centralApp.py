@@ -79,6 +79,8 @@ def syncPeriodically():
         time.sleep(5)
         reigsterSelfCentralServer()
         connect = False
+        centralServers = list(set(centralServers))
+        print(f"中央サーバー:{centralServers}")
         for centralServer in centralServers:
             try:
                 response = requests.get(f"{centralServer}/getCentralServers")
@@ -88,6 +90,7 @@ def syncPeriodically():
                 print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
                 centralServers.remove(centralServer)
             except Exception as e:
+                print(e)
                 if not isValidUrl(centralServer): centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
         if not connect:

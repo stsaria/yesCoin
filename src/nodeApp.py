@@ -151,6 +151,8 @@ def sync():
     longestChain = None
     connect = False
     message = ""
+    centralServers = list(set(centralServers))
+    print(f"中央サーバー:{centralServers}")
     for centralServer in centralServers:
         try:
             # データを送信
@@ -182,10 +184,10 @@ def sync():
     if longestChain:
         blockchain.chain = longestChain
         saveData(chainFile, blockchain.chain)
-        message = 'ブロックチェーンが同期されました'
+        message += 'ブロックチェーンが同期されました'
     else:
-        message = '既存のブロックチェーンが最長です'
-    print(message.strip("<br/>"))
+        message += '既存のブロックチェーンが最長です'
+    print(message.replace("<br/>", ""))
     saveData(usersFile, users)
     return message
 

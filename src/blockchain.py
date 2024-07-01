@@ -1,4 +1,4 @@
-import datetime, hashlib, json
+import threading, datetime, hashlib, json
 from etc import *
 
 class BlockChain:
@@ -39,6 +39,7 @@ class BlockChain:
         block = self.chain[-1]
         if newBlock:
             block = self.newBlock(proof, previousHash)
+            saveData(chainFile, self.chain)
         return block
     
     def newTransaction(self, sender=None, recipient="", amount=None):
@@ -109,4 +110,6 @@ class BlockChain:
                 okChain[i]["previousHash"] = self.hash(previousBlock)
             if currentBlock['proof'] == None:
                 print(f"警告:このブロック({i})のproofはnullです")
+            for j in range(len(list(reversed(currentBlock["transactions"])))):
+                okChain[i]["transactions"].pop(j)
             return okChain

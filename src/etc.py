@@ -60,8 +60,7 @@ users = loadData(usersFile, empty={})
 centralServers = loadData(centralServersFile)
 if os.path.isfile("BOOTSTRAPSERVER"):
     with open("BOOTSTRAPSERVER") as f:
-        if isValidUrl(f.read()):
-            centralServers.append(f.read())
+        centralServers.append(f.read())
 if centralServers == []:
     try:
         centralServers.append(input("初期中央サーバー(例: http://xxx.com:11380): "))
