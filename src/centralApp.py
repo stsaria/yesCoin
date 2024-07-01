@@ -74,9 +74,9 @@ def reigsterSelfCentralServer():
 def syncPeriodically():
     # 定期同期のための関数
     global centralServers
+    print("定期的な同期")
     while True:
         time.sleep(5)
-        print("定期的な同期")
         reigsterSelfCentralServer()
         connect = False
         for centralServer in centralServers:
@@ -92,4 +92,3 @@ def syncPeriodically():
         saveData(centralServersFile, centralServers)
         if not connect:
             print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
-        time.sleep(30)

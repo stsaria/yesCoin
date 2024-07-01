@@ -232,8 +232,8 @@ def syncPage():
 
 def syncPeriodically():
     # 定期同期のための関数
+    time.sleep(5)
     while True:
-        time.sleep(5)
         print("定期的な同期")
         sync()
-        time.sleep(30)
+        time.sleep(10)

@@ -108,5 +108,5 @@ class BlockChain:
                 print(f"Block {i} has incorrect previous hash.\n{currentBlock['previousHash']}!={self.hash(previousBlock)}")
                 okChain[i]["previousHash"] = self.hash(previousBlock)
             if currentBlock['proof'] == None:
-                print(f"警告:このブロック({i})はnullのproofがあります")
-        return okChain
+                print(f"警告:このブロック({i})のproofはnullです")
+            return okChain

@@ -1,4 +1,4 @@
-import portalocker, json, time, re
+import portalocker, json, time, os, re
 
 usersFile = "data/users.json"
 chainFile = "data/chain.json"
@@ -58,9 +58,15 @@ def isValidUrl(url):
 
 users = loadData(usersFile, empty={})
 centralServers = loadData(centralServersFile)
+if os.path.isfile("BOOTSTRAPSERVER"):
+    with open("BOOTSTRAPSERVER") as f:
+        if isValidUrl(f.read()):
+            centralServers.append(f.read())
 if centralServers == []:
     try:
         centralServers.append(input("初期中央サーバー(例: http://xxx.com:11380): "))
+        with open("BOOTSTRAPSERVER", mode="w") as f:
+            f.write(centralServers[0])
         saveData(centralServersFile, centralServers)
     except EOFError:
         # Systemdとかで実行したときに落ちないように
