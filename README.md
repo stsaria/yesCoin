@@ -1,4 +1,5 @@
 # YesCoin
+![YesCoin Logo](src/static/logo.png "YesCoin Logo")
 このリポジトリにアクセスしていただいて、お誠にありがとうございます！
 ## YesCoinとは
 YesCoinはある団体(YINST)の、仮想通貨です。
