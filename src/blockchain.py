@@ -1,4 +1,5 @@
-import threading, datetime, hashlib, json
+import datetime, hashlib, json
+from decimal import Decimal
 from etc import *
 
 class BlockChain:
@@ -101,9 +102,9 @@ class BlockChain:
         for block in self.chain:
             for transaction in block['transactions']:
                 if transaction['sender'] == address:
-                    balance -= transaction['amount']
+                    balance -= Decimal(transaction['amount'])
                 if transaction['recipient'] == address:
-                    balance += transaction['amount']
+                    balance += Decimal(transaction['amount'])
         return balance
     
     def validChain(self, chain):
@@ -117,7 +118,9 @@ class BlockChain:
                 okChain[i]["previousHash"] = self.hash(previousBlock)
             if currentBlock['proof'] == None:
                 print(f"警告:このブロック({i})のproofはnullです")
-            for j in range(len(list(reversed(currentBlock["transactions"])))):
+            for j in reversed(range(len(currentBlock["transactions"]))):
                 if currentBlock["transactions"][j]["sender"] == "0" and not currentBlock["transactions"][j]["amount"] <= 0.001:
+                    okChain[i]["transactions"].pop(j)
+                elif not currentBlock["transactions"][j]["sender"] == "0" and currentBlock["transactions"][j]["amount"] < 0.001:
                     okChain[i]["transactions"].pop(j)
         return okChain

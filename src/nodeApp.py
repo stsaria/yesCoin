@@ -1,4 +1,4 @@
-import requests, datetime, hashlib, secrets, jwt, os
+import traceback, requests, datetime, hashlib, secrets, jwt, os
 from etc import *
 from flask import Flask, request, make_response, redirect, url_for, session, render_template, jsonify
 from functools import wraps
@@ -57,30 +57,6 @@ def register():
         return redirect(url_for("login"))
     return render_template("register.html")
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    # ログインエンドポイント
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        if authenticate(username, password):
-            token = generateToken(username, password)
-            response = make_response(redirect(url_for("index")))
-            # トークンをクッキーに保存
-            response.set_cookie("token", token)
-            return response
-        else:
-            return render_template("login.html", error="ログインに失敗しました")
-    return render_template("login.html")
-
-@app.route("/logout")
-def logout():
-    # ログアウトエンドポイント
-    response = make_response(redirect(url_for("login")))
-    # トークンを削除（ログアウト）
-    response.delete_cookie("token")
-    return response
-
 def requiresAuth(f):
     # 認証が必要なエンドポイント用のデコレータ
     global session
@@ -104,6 +80,31 @@ def requiresAuth(f):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # ログインエンドポイント
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if authenticate(username, password):
+            token = generateToken(username, password)
+            response = make_response(redirect(url_for("index")))
+            # トークンをクッキーに保存
+            response.set_cookie("token", token)
+            return response
+        else:
+            return render_template("login.html", error="ログインに失敗しました")
+    return render_template("login.html")
+
+@app.route("/logout")
+@requiresAuth
+def logout():
+    # ログアウトエンドポイント
+    response = make_response(redirect(url_for("login")))
+    # トークンを削除（ログアウト）
+    response.delete_cookie("token")
+    return response
 
 @app.route('/')
 @requiresAuth
@@ -176,6 +177,7 @@ def sync():
         except requests.Timeout:
             message += f"エラー: 中央サーバーとの接続でタイムアウトしました サーバー:{centralServer}<br/>\n"
         except Exception as e:
+            print(traceback.format_exc())
             message += f"エラー: {e} サーバー:{centralServer}<br/>\n"
             if not isValidUrl(centralServer): centralServers.remove(centralServer)
     saveData(centralServersFile, centralServers)
@@ -197,10 +199,12 @@ def send():
     # 送金
     if request.method == "POST":
         # 一応ちゃんとほかのノードにこの人の履歴がないか同期しとく
+        amount = float(request.form["amount"])
+        if amount < 0.001:
+            return render_template("send.html", error="送金額は0.001より小さくできません")
         sync()
         sender = hashlib.sha256(session["username"].encode()).hexdigest()
         recipient = request.form["recipient"]
-        amount = float(request.form["amount"])
         if blockchain.getBalance(sender) < amount:
             return render_template("send.html", error="残高が不足しています")
         blockchain.newTransaction(sender, recipient, amount)
