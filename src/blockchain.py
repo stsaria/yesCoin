@@ -37,9 +37,9 @@ class BlockChain:
         })
         previousHash = self.hash(lastBlock)
         block = self.chain[-1]
+        
         if newBlock:
             block = self.newBlock(proof, previousHash)
-            saveData(chainFile, self.chain)
         return block
     
     def newTransaction(self, sender=None, recipient="", amount=None):
@@ -50,18 +50,25 @@ class BlockChain:
                 'recipient': recipient,
                 'amount': amount,
             })
+            self.difficulty = 1
+            lastBlock = self.lastBlock
+            proof = self.proofOfWork(lastBlock["proof"])
+            previousHash = self.hash(lastBlock)
+            self.newBlock(proof, previousHash)
+            self.difficulty = 6
         currentTime = datetime.datetime.now()
         blockCreateTime = datetime.datetime.strptime(self.lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
         if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
             # 最後のブロックが作られた時間と今の時間が10分以内なら
             # 最後のブロックのトランザクション配列にappendする。
-            if None in [sender, amount]:
-                self.mining(recipient, newBlock=False)
+            self.mining(recipient, newBlock=False)
             self.chain[-1]["transactions"].append(self.transactions[-1])
             block = self.chain[-1]
             saveData(chainFile, self.chain)
+            print(self.transactions[-1])
         else:
             block = self.mining(recipient)
+            print("新しいブロック"+block)
         return self.lastBlock['index'] + 1, block
     
     @staticmethod
@@ -113,4 +120,4 @@ class BlockChain:
             for j in range(len(list(reversed(currentBlock["transactions"])))):
                 if currentBlock["transactions"][j]["sender"] == "0" and not currentBlock["transactions"][j]["amount"] <= 0.001:
                     okChain[i]["transactions"].pop(j)
-            return okChain
+        return okChain
