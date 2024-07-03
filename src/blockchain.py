@@ -111,5 +111,6 @@ class BlockChain:
             if currentBlock['proof'] == None:
                 print(f"警告:このブロック({i})のproofはnullです")
             for j in range(len(list(reversed(currentBlock["transactions"])))):
-                okChain[i]["transactions"].pop(j)
+                if currentBlock["transactions"][j]["sender"] == "0" and not currentBlock["transactions"][j]["amount"] <= 0.001:
+                    okChain[i]["transactions"].pop(j)
             return okChain
