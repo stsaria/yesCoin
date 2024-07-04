@@ -98,13 +98,13 @@ class BlockChain:
     
     def getBalance(self, address):
         # 所持金表示
-        balance = 0
+        balance = Decimal(0)
         for block in self.chain:
             for transaction in block['transactions']:
                 if transaction['sender'] == address:
-                    balance -= Decimal(transaction['amount'])
+                    balance -= Decimal(str(transaction['amount']))
                 if transaction['recipient'] == address:
-                    balance += Decimal(transaction['amount'])
+                    balance += Decimal(str(transaction['amount']))
         return balance
     
     def validChain(self, chain):
