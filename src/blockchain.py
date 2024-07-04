@@ -3,7 +3,7 @@ from decimal import Decimal
 from etc import *
 
 class BlockChain:
-    def __init__(self, miningDifficulty = 6):
+    def __init__(self, miningDifficulty = 1):
         # チェーンデータの読み込み
         self.chain = loadData(chainFile)
         self.transactions = []
@@ -69,7 +69,7 @@ class BlockChain:
             print(self.transactions[-1])
         else:
             block = self.mining(recipient)
-            print("新しいブロック"+block)
+            print("新しいブロック", block)
         return self.lastBlock['index'] + 1, block
     
     @staticmethod
