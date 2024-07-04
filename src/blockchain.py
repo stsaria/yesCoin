@@ -3,7 +3,7 @@ from decimal import Decimal
 from etc import *
 
 class BlockChain:
-    def __init__(self, miningDifficulty = 1):
+    def __init__(self, miningDifficulty = 6):
         # チェーンデータの読み込み
         self.chain = loadData(chainFile)
         self.transactions = []
