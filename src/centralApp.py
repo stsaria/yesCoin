@@ -22,15 +22,20 @@ def sync():
     syncData = request.json
 
     chain = syncData["chain"]
-    length = len(chain)
-    maxChainLength = len(blockchain.chain)
-    print(maxChainLength)
-    if length > maxChainLength:
+    rtc = tc = 0
+    result = {"chain": blockchain.chain, "users": users, "centralServers": centralServers}
+    for c in chain:
+        for _ in range(len(c["transactions"])):
+            rtc += 1
+    for c in blockchain.chain:
+        for _ in range(len(c["transactions"])):
+            tc += 1
+    if rtc > tc:
         blockchain.chain = chain
         saveData(chainFile, blockchain.chain)
     users = addUniqueKeys(users, syncData["users"])
     saveData(usersFile, users)
-    return jsonify({"chain": blockchain.chain, "users": users, "centralServers": centralServers}), 200
+    return jsonify(result), 200
 
 @app.route("/registerCentralServer", methods=["GET"])
 def registerCentralServer():
