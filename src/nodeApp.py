@@ -172,6 +172,7 @@ def sync():
                     for t in range(len(c["transactions"])):
                         pass
                     tc += t
+                print(tc, rtc)
                 if rtc > tc:
                     # 取得したチェーンのトランザクション数が
                     # 今のトランザクション数より大きかった時
