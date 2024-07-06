@@ -36,7 +36,7 @@ def sync():
 def registerCentralServer():
     global centralServers
     try:
-        response = requests.get(f"http://{request.remote_addr}:11380/")
+        response = requests.get(f"http://{request.remote_addr}:11380/", timeout=7)
         if response.status_code == 200 and "hello" in response.json():
             if response.json()["hello"] == "world":
                 centralServers = addUniqueElements(centralServers, [f"http://{request.remote_addr}:11380"])
@@ -53,7 +53,7 @@ def reigsterSelfCentralServer():
     connect = False
     for centralServer in centralServers:
         try:
-            response = requests.get(f"{centralServer}/registerCentralServer")
+            response = requests.get(f"{centralServer}/registerCentralServer", timeout=7)
             result = response.json()["result"]
             if result == 0:
                 connect = True
@@ -62,11 +62,11 @@ def reigsterSelfCentralServer():
                 print(f"エラー: 不明\nサーバー: {centralServer}")
             elif result == 2:
                 print(f"エラー: このサーバーは相手のサーバーと合いません\nサーバー: {centralServer}")
-        except requests.ConnectionError:
+        except requests.exceptions.RequestException as e:
             print(f"エラー: 中央サーバーに接続できません\nサーバー: {centralServer}")
             centralServers.remove(centralServer)
         except:
-            if not isValidUrl(centralServer): centralServers.remove(centralServer)
+            if not extractBaseUrl(centralServer): centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
     if not connect:
         print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")
@@ -83,15 +83,18 @@ def syncPeriodically():
         print(f"中央サーバー:{centralServers}")
         for centralServer in centralServers:
             try:
-                response = requests.get(f"{centralServer}/getCentralServers")
-                centralServers = addUniqueElements(centralServers, response.json()["centralServers"], url=True)
+                response = requests.get(f"{centralServer}/getCentralServers", timeout=7)
+                responseCentralServers = []
+                for responseCentralServer in response.json()['centralServers']:
+                    if extractBaseUrl(responseCentralServer):
+                        responseCentralServers.append(extractBaseUrl(responseCentralServer))
+                centralServers = addUniqueElements(centralServers, responseCentralServers, url=True)
                 connect = True
-            except requests.ConnectionError:
-                print(f"エラー: 中央サーバーに接続できません\nサーバー:{centralServer}")
+            except requests.exceptions.RequestException as e:
                 centralServers.remove(centralServer)
             except Exception as e:
                 print(e)
-                if not isValidUrl(centralServer): centralServers.remove(centralServer)
+                if not extractBaseUrl(centralServer): centralServers.remove(centralServer)
         saveData(centralServersFile, centralServers)
         if not connect:
             print("エラー: どの中央サーバーにも接続できませんでした。\ndata/centralServers.jsonを削除し、初期ノードを設定してください")

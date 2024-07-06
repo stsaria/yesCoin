@@ -44,17 +44,20 @@ def addUniqueKeys(d1 : dict, d2 : dict):
             result[key] = value
     return result
 
-def isValidUrl(url):
-    # URLの正規表現パターン
-    regex = re.compile(
-        r"^(?:http|ftp)s?://"  # http:// または https://
-        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # ドメイン名
-        r"localhost|"  # localhost
-        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"  # IPv4アドレス
-        r"\[?[A-F0-9]*:[A-F0-9:]+\]?)"  # IPv6アドレス
-        r"(?::\d+)?"  # オプションのポート番号
-        r"(?:/?|[/?]\S+)$", re.IGNORECASE)
-    return re.match(regex, url) is not None
+def extractBaseUrl(text):
+    # URLを見つけるための正規表現パターン
+    urlPattern = r'https?://[^\s]+'
+    # 最初のURLを見つける
+    match = re.search(urlPattern, text)
+    if match:
+        # 完全なURLを取得
+        fullUrl = match.group(0)
+        # プロトコルとドメイン部分を抽出するための正規表現パターン
+        baseUrlPattern = r'https?://[^/]+'
+        baseUrlMatch = re.search(baseUrlPattern, fullUrl)
+        if baseUrlMatch:
+            return baseUrlMatch.group(0)
+    return None
 
 users = loadData(usersFile, empty={})
 centralServers = loadData(centralServersFile)

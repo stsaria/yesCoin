@@ -157,7 +157,7 @@ def sync():
     for centralServer in centralServers:
         try:
             # データを送信
-            response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"}, timeout=3.5)
+            response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"}, timeout=7)
             if response.status_code == 200:
                 maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
@@ -167,19 +167,21 @@ def sync():
                     maxLength = okChain
                     blockchain.chain = longestChain = okChain
                 users = addUniqueKeys(users, response.json()['users'])
-                centralServers = addUniqueElements(centralServers, response.json()['centralServers'], url=True)
+                responseCentralServers = []
+                for responseCentralServer in response.json()['centralServers']:
+                    if extractBaseUrl(responseCentralServer):
+                        responseCentralServers.append(extractBaseUrl(responseCentralServer))
+                centralServers = addUniqueElements(centralServers, responseCentralServers, url=True)
                 connect = True
             else:
                 message += f"エラー: エラーレスポンスが返されました サーバー:{centralServer}<br/>\n"
-        except requests.ConnectionError:
-            message += f"エラー: 中央サーバーに接続できませんでした サーバー:{centralServer}<br/>\n"
+        except requests.exceptions.RequestException as e:
+            message += f"接続エラー: {e} サーバー:{centralServer}<br/>\n"
             centralServers.remove(centralServer)
-        except requests.Timeout:
-            message += f"エラー: 中央サーバーとの接続でタイムアウトしました サーバー:{centralServer}<br/>\n"
         except Exception as e:
             print(traceback.format_exc())
             message += f"エラー: {e} サーバー:{centralServer}<br/>\n"
-            if not isValidUrl(centralServer): centralServers.remove(centralServer)
+            if not extractBaseUrl(centralServer): centralServers.remove(centralServer)
     saveData(centralServersFile, centralServers)
     if not connect:
         message += "エラー: どの中央サーバーにも接続できませんでした。<br/>\nサーバー管理者はdata/centralServers.jsonを削除し、初期ノードを設定してください<br/>\n"
