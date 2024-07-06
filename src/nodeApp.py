@@ -159,12 +159,22 @@ def sync():
             # データを送信
             response = requests.post(f"{centralServer}/sync", data=json.dumps(data), headers={"Content-Type": "application/json"}, timeout=7)
             if response.status_code == 200:
-                maxLength = len(blockchain.chain)
                 chain = response.json()['chain']
                 okChain = blockchain.validChain(chain)
                 print(maxLength, len(okChain))
-                if len(okChain) > maxLength:
-                    maxLength = okChain
+                # transaction count var
+                rtc = tc = 0
+                for c in okChain:
+                    for t in range(len(c["transactions"])):
+                        pass
+                    rtc += t
+                for c in blockchain.chain:
+                    for t in range(len(c["transactions"])):
+                        pass
+                    tc += t
+                if rtc > tc:
+                    # 取得したチェーンのトランザクション数が
+                    # 今のトランザクション数より大きかった時
                     blockchain.chain = longestChain = okChain
                 users = addUniqueKeys(users, response.json()['users'])
                 responseCentralServers = []

@@ -123,4 +123,8 @@ class BlockChain:
                     okChain[i]["transactions"].pop(j)
                 elif not currentBlock["transactions"][j]["sender"] == "0" and currentBlock["transactions"][j]["amount"] < 0.001:
                     okChain[i]["transactions"].pop(j)
+        # memo:ここは本来proofを確認するようにしたかったし、
+        # 関数もあるけどYINSTで使ってた時にproofがNullになった
+        # こともあったからできない(´;ω;｀)
+        # まあ、不正はしないと考えていいのかな
         return okChain
