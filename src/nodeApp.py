@@ -164,13 +164,11 @@ def sync():
                 # transaction count var
                 rtc = tc = 0
                 for c in okChain:
-                    for t in range(len(c["transactions"])):
-                        pass
-                    rtc += t
+                    for _ in range(len(c["transactions"])):
+                        rtc += 1
                 for c in blockchain.chain:
-                    for t in range(len(c["transactions"])):
-                        pass
-                    tc += t
+                    for _ in range(len(c["transactions"])):
+                        tc += 1
                 print(tc, rtc)
                 if rtc > tc:
                     # 取得したチェーンのトランザクション数が
