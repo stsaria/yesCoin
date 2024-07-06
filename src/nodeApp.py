@@ -161,7 +161,6 @@ def sync():
             if response.status_code == 200:
                 chain = response.json()['chain']
                 okChain = blockchain.validChain(chain)
-                print(maxLength, len(okChain))
                 # transaction count var
                 rtc = tc = 0
                 for c in okChain:
