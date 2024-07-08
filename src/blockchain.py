@@ -29,8 +29,16 @@ class BlockChain:
     
     def mining(self, address, newBlock=True):
         lastBlock = self.lastBlock
-        lastProof = lastBlock["proof"]
-        proof = self.proofOfWork(lastProof)
+        proof = self.proofOfWork()
+        if not proof:
+            block = {
+                "index": 0,
+                "timestamp": str(datetime.datetime.now()),
+                "transactions": [],
+                "proof": 0,
+                "previousHash": "成功しませんでした"
+            }
+            return block
         self.transactions.append({
             "sender": "0",
             "recipient": address,
@@ -51,15 +59,15 @@ class BlockChain:
                 'recipient': recipient,
                 'amount': amount,
             })
-            self.difficulty = 1
             lastBlock = self.lastBlock
-            proof = self.proofOfWork(lastBlock["proof"])
+            proof = self.proofOfWork()
+            if not proof:
+                return 114514
             previousHash = self.hash(lastBlock)
             self.newBlock(proof, previousHash)
-            self.difficulty = 6
         currentTime = datetime.datetime.now()
         blockCreateTime = datetime.datetime.strptime(self.lastBlock["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
-        if blockCreateTime > currentTime - datetime.timedelta(minutes=10):
+        if blockCreateTime > currentTime - datetime.timedelta(minutes=10) and self.chain[-1]["index"] != 1:
             # 最後のブロックが作られた時間と今の時間が10分以内なら
             # 最後のブロックのトランザクション配列にappendする。
             self.mining(recipient, newBlock=False)
@@ -83,11 +91,14 @@ class BlockChain:
         # 最後のブロックを返す
         return self.chain[-1]
 
-    def proofOfWork(self, lastProof):
+    def proofOfWork(self):
         # ブロックチェーンの新しいブロックを生成するための証明
         proof = 0
-        while not self.validProof(lastProof, proof):
+        while not self.validProof(self.lastBlock["proof"], proof) and proof < 10000000000:
             proof += 1
+        if proof >= 10000000000:
+            # proofの計算があまりにも多すぎたら
+            return None
         return proof
 
     def validProof(self, lastProof, proof):
@@ -119,7 +130,7 @@ class BlockChain:
             if currentBlock['proof'] == None:
                 print(f"警告:このブロック({i})のproofはnullです")
             for j in reversed(range(len(currentBlock["transactions"]))):
-                if currentBlock["transactions"][j]["sender"] == "0" and not currentBlock["transactions"][j]["amount"] <= 0.001:
+                if currentBlock["transactions"][j]["sender"] == "0" and not currentBlock["transactions"][j]["amount"] > 0.001:
                     okChain[i]["transactions"].pop(j)
                 elif not currentBlock["transactions"][j]["sender"] == "0" and currentBlock["transactions"][j]["amount"] < 0.001:
                     okChain[i]["transactions"].pop(j)
@@ -127,4 +138,5 @@ class BlockChain:
         # 関数もあるけどYINSTで使ってた時にproofがNullになった
         # こともあったからできない(´;ω;｀)
         # まあ、不正はしないと考えていいのかな
+        # YesCoinPでまあよくなった
         return okChain
